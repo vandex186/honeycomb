@@ -10,6 +10,7 @@ const grid = new Grid(CustomHex, rectangle({ width: 7, height: 7 }))
 const container = document.getElementById('container')
 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 svg.setAttribute('viewBox', '0 0 300 300')
+svg.classList.add('hex-grid') // Added class for the SVG
 container?.appendChild(svg)
 
 // Initial render
