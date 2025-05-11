@@ -5,7 +5,7 @@ class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   custom = 'test'
 }
 
-const grid = new Grid(CustomHex, rectangle({ width: 10, height: 10 }))
+const grid = new Grid(CustomHex, rectangle({ width: 10, height: 7 }))
 
 for (const hex of grid) {
   render(hex)
