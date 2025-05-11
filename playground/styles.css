@@ -25,24 +25,26 @@ body {
   position: relative;
   touch-action: none;
   perspective: 1000px;
+  overflow: visible;
 }
 
-svg {
+.hex-grid {
   display: block;
   width: 100%;
   height: 100%;
   touch-action: none;
   transform-style: preserve-3d;
   transform: matrix3d(1, 0, 0, 0, 0, 1, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1);
+  overflow: visible;
 }
 
-svg text {
+.hex-grid text {
   fill: currentColor;
   user-select: none;
   font-size: 3vmin;
 }
 
-svg polygon {
+.hex-grid polygon {
   fill: rgba(255, 255, 255, 0.1);
   stroke: rgba(255, 255, 255, 0.5);
   stroke-width: 1;
