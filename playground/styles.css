@@ -1,18 +1,34 @@
 html,
 body {
   height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
 }
 
 body {
-  margin: 2vmin;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-family: sans-serif;
   color: #333;
+}
+
+#container {
+  width: 80vmin;
+  height: 80vmin;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  perspective: 1000px;
 }
 
 svg {
   display: block;
   overflow: visible;
 }
+
 svg text {
   fill: currentColor;
 }
