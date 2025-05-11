@@ -8,13 +8,6 @@ body {
   touch-action: none;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  font-family: sans-serif;
-  color: #fff;
-}
-
 .top-area {
   position: fixed;
   top: 0;
@@ -27,6 +20,8 @@ body {
   justify-content: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 10;
+  position: relative;
+  margin-bottom: -15vh;
 }
 
 #container {
