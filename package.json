@@ -13,6 +13,8 @@
     "honeycomb-grid": "^4.1.5"
   },
   "devDependencies": {
+    "@svgdotjs/svg.js": "^3.2.0",
+    "abstract-astar": "^0.2.0",
     "typescript": "^5.1.6",
     "vite": "^4.4.4",
     "vite-plugin-dts": "^3.5.1"
