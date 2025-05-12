@@ -1,0 +1,152 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.top-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 15vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+  touch-action: manipulation;
+}
+
+.nav-button {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  min-width: 100px;
+  min-height: 44px;
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-button:active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0.98);
+}
+
+.nav-button.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+#container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  touch-action: none;
+  perspective: 1000px;
+  overflow: hidden;
+}
+
+.bottom-area {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 15vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+  touch-action: manipulation;
+  padding: 0 20px;
+}
+
+body[data-view="dungeon"] .bottom-area {
+  display: flex;
+}
+
+.left-controls,
+.center-controls,
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+}
+
+.control-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.control-button:active {
+  transform: scale(0.95);
+}
+
+.control-area {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 2px solid #333;
+}
+
+.control-button.red { background: #ff4444; }
+.control-button.orange { background: #ff8c00; }
+.control-button.blue { background: #4444ff; }
+
+.hex-grid {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  transform-style: preserve-3d;
+  transform: matrix3d(1, 0, 0, 0, 0, 1, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1);
+  overflow: visible;
+}
+
+.hex-grid text {
+  fill: currentColor;
+  user-select: none;
+  font-size: 3vmin;
+  pointer-events: none;
+}
+
+.hex-grid polygon {
+  fill: rgba(255, 255, 255, 0.1);
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1;
+}

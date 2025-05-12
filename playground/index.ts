@@ -31,6 +31,9 @@ function createGrid(options: GridOptions) {
 }
 
 function initializeGrid(view: string) {
+  // Set view attribute on body
+  document.body.setAttribute('data-view', view)
+
   // Clear existing grid
   const container = document.getElementById('container')
   if (container) {
