@@ -172,23 +172,32 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     cameraState.lastDistance = 0
   }
 
-  // Event listeners
+  // Event listeners for the SVG element only
   svg.addEventListener('touchstart', (e) => {
+    e.preventDefault()
     if (e.touches.length === 1) {
       handleStart(e.touches[0].clientX, e.touches[0].clientY)
     }
-  }, { passive: false })
+  })
 
   svg.addEventListener('touchmove', (e) => {
+    e.preventDefault()
     if (e.touches.length === 1) {
       handleMove(e.touches[0].clientX, e.touches[0].clientY)
     } else if (e.touches.length === 2) {
       handlePinch(e)
     }
-  }, { passive: false })
+  })
 
-  svg.addEventListener('touchend', handleEnd, { passive: false })
-  svg.addEventListener('touchcancel', handleEnd, { passive: false })
+  svg.addEventListener('touchend', (e) => {
+    e.preventDefault()
+    handleEnd()
+  })
+
+  svg.addEventListener('touchcancel', (e) => {
+    e.preventDefault()
+    handleEnd()
+  })
 
   svg.addEventListener('mousedown', (e) => {
     handleStart(e.clientX, e.clientY)
@@ -210,26 +219,26 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   })
 }
 
-// Initialize navigation
+// Initialize navigation with touch events
 document.querySelectorAll('.nav-button').forEach(button => {
-  button.addEventListener('click', (e) => {
-    const view = (e.target as HTMLElement).dataset.view
+  const handleClick = (e: Event) => {
+    e.preventDefault()
+    const target = e.target as HTMLElement
+    const view = target.dataset.view
     if (view) {
       // Update active button
       document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
-      ;(e.target as HTMLElement).classList.add('active')
+      target.classList.add('active')
       
       // Update grid
       currentView = view
       initializeGrid(view)
     }
-  })
-})
+  }
 
-// Prevent default touch behaviors
-document.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false })
-document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false })
-document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false })
+  button.addEventListener('click', handleClick)
+  button.addEventListener('touchend', handleClick)
+})
 
 // Initial render
 initializeGrid('castle')
