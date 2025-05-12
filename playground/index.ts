@@ -9,9 +9,23 @@ const grid = new Grid(CustomHex, rectangle({ width: 7, height: 7 }))
 
 const container = document.getElementById('container')
 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-svg.setAttribute('viewBox', '0 0 300 300')
-svg.classList.add('hex-grid') // Added class for the SVG
+
+// Calculate grid dimensions and center offset
+const gridWidth = grid.pixelWidth
+const gridHeight = grid.pixelHeight
+const xOffset = (window.innerWidth - gridWidth) / 2
+const yOffset = (window.innerHeight - gridHeight) / 2
+
+svg.setAttribute('width', '100%')
+svg.setAttribute('height', '100%')
+svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+svg.classList.add('hex-grid')
 container?.appendChild(svg)
+
+// Create a group for all hexes and center it
+const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+gridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+svg.appendChild(gridGroup)
 
 // Initial render
 for (const hex of grid) {
@@ -30,7 +44,7 @@ for (const hex of grid) {
   
   group.appendChild(polygon)
   group.appendChild(text)
-  svg.appendChild(group)
+  gridGroup.appendChild(group)
 }
 
 // Camera control state
@@ -93,6 +107,14 @@ function handleEnd() {
   cameraState.isDragging = false
   cameraState.lastDistance = 0
 }
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  const newXOffset = (window.innerWidth - gridWidth) / 2
+  const newYOffset = (window.innerHeight - gridHeight) / 2
+  gridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+})
 
 // Touch events
 svg.addEventListener('touchstart', (e) => {
