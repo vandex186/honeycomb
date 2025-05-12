@@ -6,6 +6,7 @@ body {
   background: #000;
   overflow: hidden;
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .top-area {
@@ -21,7 +22,7 @@ body {
   gap: 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 1000;
-  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .nav-button {
@@ -33,9 +34,11 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 4px;
-  pointer-events: auto;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  min-width: 100px;
+  min-height: 44px;
 }
 
 .nav-button:hover {
@@ -62,7 +65,6 @@ body {
   touch-action: none;
   perspective: 1000px;
   overflow: hidden;
-  pointer-events: auto;
 }
 
 .bottom-area {
@@ -77,7 +79,7 @@ body {
   justify-content: center;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 1000;
-  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .hex-grid {
@@ -94,6 +96,7 @@ body {
   fill: currentColor;
   user-select: none;
   font-size: 3vmin;
+  pointer-events: none;
 }
 
 .hex-grid polygon {
