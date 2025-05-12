@@ -240,5 +240,12 @@ document.querySelectorAll('.nav-button').forEach(button => {
   button.addEventListener('touchend', handleClick)
 })
 
+// Add event listener for red button animation
+document.querySelector('.control-button.red')?.addEventListener('click', (e) => {
+  const button = e.currentTarget as HTMLElement;
+  button.classList.add('active');
+  setTimeout(() => button.classList.remove('active'), 500);
+});
+
 // Initial render
 initializeGrid('castle')
