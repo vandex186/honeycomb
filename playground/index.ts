@@ -1,251 +1,60 @@
 import { defineHex, Grid, rectangle } from '../src'
-import { Orientation } from '../src/hex/types'
-
-interface GridOptions {
-  orientation: Orientation
-  width: number
-  height: number
-}
 
 class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   custom = 'test'
   transformedCoordinates?: { x: number; y: number }
 }
 
-class VerticalHex extends defineHex({ 
-  dimensions: 30, 
-  origin: 'topLeft',
-  orientation: Orientation.FLAT 
-}) {
-  custom = 'test'
-  transformedCoordinates?: { x: number; y: number }
-}
+const grid = new Grid(CustomHex, rectangle({ width: 7, height: 7 }))
 
-// Grid state
-let currentGrid: Grid<CustomHex | VerticalHex>
-let currentView = 'castle'
+const container = document.getElementById('container')
+const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
-function createGrid(options: GridOptions) {
-  const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
-  return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
-}
+// Calculate grid dimensions
+const gridWidth = grid.pixelWidth
+const gridHeight = grid.pixelHeight
+const xOffset = (300 - gridWidth) / 2 // Center horizontally
+const yOffset = (300 - gridHeight) / 2 // Center vertically
 
-function initializeGrid(view: string) {
-  // Clear existing grid
-  const container = document.getElementById('container')
-  if (container) {
-    container.innerHTML = ''
-  }
-
-  let gridOptions: GridOptions
-
-  switch (view) {
-    case 'dungeon':
-      gridOptions = {
-        orientation: Orientation.FLAT,
-        width: 7,
-        height: 7
-      }
-      break
-    case 'castle':
-    default:
-      gridOptions = {
-        orientation: Orientation.POINTY,
-        width: 7,
-        height: 7
-      }
-      break
-  }
-
-  if (view === 'hero') {
-    if (container) {
-      container.innerHTML = '<div style="color: white; font-size: 2rem;">Hero View Coming Soon</div>'
-    }
-    return
-  }
-
-  currentGrid = createGrid(gridOptions)
-  renderGrid(currentGrid)
-}
-
-function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
-  const container = document.getElementById('container')
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-
-  // Calculate grid dimensions and center offset
-  const gridWidth = grid.pixelWidth
-  const gridHeight = grid.pixelHeight
-  const xOffset = (window.innerWidth - gridWidth) / 2
-  const yOffset = (window.innerHeight - gridHeight) / 2
-
-  svg.setAttribute('width', '100%')
-  svg.setAttribute('height', '100%')
-  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
-  svg.classList.add('hex-grid')
-  container?.appendChild(svg)
-
-  // Create a group for all hexes and center it
-  const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  gridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  svg.appendChild(gridGroup)
-
-  // Render hexes
-  for (const hex of grid) {
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-    const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
-    
-    polygon.setAttribute('points', points)
-    
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    text.textContent = `${hex.q},${hex.r}`
-    text.setAttribute('x', hex.x.toString())
-    text.setAttribute('y', hex.y.toString())
-    text.setAttribute('text-anchor', 'middle')
-    text.setAttribute('dominant-baseline', 'central')
-    
-    group.appendChild(polygon)
-    group.appendChild(text)
-    gridGroup.appendChild(group)
-  }
-
-  setupInteractions(svg, gridGroup, gridWidth, gridHeight)
-}
-
-function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
-  // Camera control state
-  const cameraState = {
-    matrix: [1, 0, 0, 0, 0, 1, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
-    isDragging: false,
-    lastX: 0,
-    lastY: 0,
-    lastDistance: 0
-  }
-
-  function updateTransform() {
-    svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
-  }
-
-  function handleStart(x: number, y: number) {
-    cameraState.isDragging = true
-    cameraState.lastX = x
-    cameraState.lastY = y
-  }
-
-  function handleMove(x: number, y: number) {
-    if (!cameraState.isDragging) return
-
-    const deltaX = (x - cameraState.lastX) * 0.5
-    const deltaY = (y - cameraState.lastY) * 0.5
-
-    cameraState.matrix[12] += deltaX
-    cameraState.matrix[13] += deltaY
-
-    updateTransform()
-
-    cameraState.lastX = x
-    cameraState.lastY = y
-  }
-
-  function handlePinch(e: TouchEvent) {
-    if (e.touches.length !== 2) return
-
-    const touch1 = e.touches[0]
-    const touch2 = e.touches[1]
-    const distance = Math.hypot(
-      touch2.clientX - touch1.clientX,
-      touch2.clientY - touch1.clientY
-    )
-
-    if (cameraState.lastDistance) {
-      const delta = (distance - cameraState.lastDistance) * 0.01
-      cameraState.matrix[0] = Math.max(0.5, Math.min(2, cameraState.matrix[0] + delta))
-      cameraState.matrix[5] = Math.max(0.5, Math.min(2, cameraState.matrix[5] + delta))
-      updateTransform()
-    }
-
-    cameraState.lastDistance = distance
-  }
-
-  function handleEnd() {
-    cameraState.isDragging = false
-    cameraState.lastDistance = 0
-  }
-
-  // Event listeners for the SVG element only
-  svg.addEventListener('touchstart', (e) => {
-    e.preventDefault()
-    if (e.touches.length === 1) {
-      handleStart(e.touches[0].clientX, e.touches[0].clientY)
-    }
-  })
-
-  svg.addEventListener('touchmove', (e) => {
-    e.preventDefault()
-    if (e.touches.length === 1) {
-      handleMove(e.touches[0].clientX, e.touches[0].clientY)
-    } else if (e.touches.length === 2) {
-      handlePinch(e)
-    }
-  })
-
-  svg.addEventListener('touchend', (e) => {
-    e.preventDefault()
-    handleEnd()
-  })
-
-  svg.addEventListener('touchcancel', (e) => {
-    e.preventDefault()
-    handleEnd()
-  })
-
-  svg.addEventListener('mousedown', (e) => {
-    handleStart(e.clientX, e.clientY)
-  })
-
-  svg.addEventListener('mousemove', (e) => {
-    handleMove(e.clientX, e.clientY)
-  })
-
-  svg.addEventListener('mouseup', handleEnd)
-  svg.addEventListener('mouseleave', handleEnd)
-
-  // Handle window resize
-  window.addEventListener('resize', () => {
-    const newXOffset = (window.innerWidth - gridWidth) / 2
-    const newYOffset = (window.innerHeight - gridHeight) / 2
-    gridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
-    svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
-  })
-}
-
-// Initialize navigation with touch events
-document.querySelectorAll('.nav-button').forEach(button => {
-  const handleClick = (e: Event) => {
-    e.preventDefault()
-    const target = e.target as HTMLElement
-    const view = target.dataset.view
-    if (view) {
-      // Update active button
-      document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
-      target.classList.add('active')
-      
-      // Update grid
-      currentView = view
-      initializeGrid(view)
-    }
-  }
-
-  button.addEventListener('click', handleClick)
-  button.addEventListener('touchend', handleClick)
-})
-
-// Add event listener for red button animation
-document.querySelector('.control-button.red')?.addEventListener('click', (e) => {
-  const button = e.currentTarget as HTMLElement;
-  button.classList.add('active');
-  setTimeout(() => button.classList.remove('active'), 500);
-});
+svg.setAttribute('viewBox', `0 0 300 300`)
+svg.classList.add('hex-grid')
+container?.appendChild(svg)
 
 // Initial render
-initializeGrid('castle')
+for (const hex of grid) {
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+  
+  // Apply offset to center the grid
+  const points = hex.corners
+    .map(({ x, y }) => `${x + xOffset},${y + yOffset}`)
+    .join(' ')
+  
+  polygon.setAttribute('points', points)
+  
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+  text.textContent = `${hex.q},${hex.r}`
+  text.setAttribute('x', (hex.x + xOffset).toString())
+  text.setAttribute('y', (hex.y + yOffset).toString())
+  text.setAttribute('text-anchor', 'middle')
+  text.setAttribute('dominant-baseline', 'central')
+  
+  group.appendChild(polygon)
+  group.appendChild(text)
+  svg.appendChild(group)
+}
+
+// Camera control state
+const cameraState = {
+  matrix: [1, 0, 0, 0, 0, 1, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
+  isDragging: false,
+  lastX: 0,
+  lastY: 0,
+  lastDistance: 0
+}
+
+function updateTransform() {
+  svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
+}
+
+function
