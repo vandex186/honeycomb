@@ -18,10 +18,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 10;
   position: relative;
   margin-bottom: -15vh;
+}
+
+.nav-button {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-button.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 #container {
