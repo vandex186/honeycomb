@@ -118,7 +118,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
 function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
   // Camera control state
   const cameraState = {
-    matrix: [1, 0, 0, 0, 0, 1, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
+    matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
     isDragging: false,
     lastX: 0,
     lastY: 0,
