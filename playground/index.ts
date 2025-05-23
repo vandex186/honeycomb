@@ -1,5 +1,6 @@
 import { defineHex, Grid, rectangle } from '../src'
 import { Orientation } from '../src/hex/types'
+import { BUILDING, FIELD, ROAD, TREES, WATER } from './terrain'
 
 interface GridOptions {
   orientation: Orientation
@@ -7,57 +8,35 @@ interface GridOptions {
   height: number
 }
 
-class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
-  custom = 'test'
-  transformedCoordinates?: { x: number; y: number }
-}
-
-class VerticalHex extends defineHex({ 
+class CustomHex extends defineHex({ 
   dimensions: 30, 
   origin: 'topLeft',
-  orientation: Orientation.FLAT 
+  orientation: Orientation.POINTY 
 }) {
-  custom = 'test'
+  terrain = FIELD
   transformedCoordinates?: { x: number; y: number }
 }
 
 // Grid state
-let currentGrid: Grid<CustomHex | VerticalHex>
+let currentGrid: Grid<CustomHex>
 let currentView = 'castle'
 
 function createGrid(options: GridOptions) {
-  const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
-  return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
+  return new Grid(CustomHex, rectangle({ width: options.width, height: options.height }))
 }
 
 function initializeGrid(view: string) {
-  // Set view attribute on body
   document.body.setAttribute('data-view', view)
 
-  // Clear existing grid
   const container = document.getElementById('container')
   if (container) {
     container.innerHTML = ''
   }
 
-  let gridOptions: GridOptions
-
-  switch (view) {
-    case 'dungeon':
-      gridOptions = {
-        orientation: Orientation.FLAT,
-        width: 7,
-        height: 7
-      }
-      break
-    case 'castle':
-    default:
-      gridOptions = {
-        orientation: Orientation.POINTY,
-        width: 7,
-        height: 7
-      }
-      break
+  let gridOptions: GridOptions = {
+    orientation: Orientation.POINTY,
+    width: 7,
+    height: 7
   }
 
   if (view === 'hero') {
@@ -68,14 +47,30 @@ function initializeGrid(view: string) {
   }
 
   currentGrid = createGrid(gridOptions)
+  
+  // Set terrain types
+  currentGrid.forEach(hex => {
+    // Example terrain distribution - you can modify this logic
+    const random = Math.random()
+    if (random < 0.2) {
+      hex.terrain = WATER
+    } else if (random < 0.4) {
+      hex.terrain = TREES
+    } else if (random < 0.5) {
+      hex.terrain = BUILDING
+    } else if (random < 0.6) {
+      hex.terrain = ROAD
+    }
+    // else remains FIELD (default)
+  })
+
   renderGrid(currentGrid)
 }
 
-function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
+function renderGrid(grid: Grid<CustomHex>) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
-  // Calculate grid dimensions and center offset
   const gridWidth = grid.pixelWidth
   const gridHeight = grid.pixelHeight
   const xOffset = (window.innerWidth - gridWidth) / 2
@@ -87,18 +82,17 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
   svg.classList.add('hex-grid')
   container?.appendChild(svg)
 
-  // Create a group for all hexes and center it
   const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
   gridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
   svg.appendChild(gridGroup)
 
-  // Render hexes
   for (const hex of grid) {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
     const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
     
     polygon.setAttribute('points', points)
+    polygon.setAttribute('fill', `#${hex.terrain.color.toString(16).padStart(6, '0')}`)
     
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     text.textContent = `${hex.q},${hex.r}`
@@ -106,6 +100,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
     text.setAttribute('y', hex.y.toString())
     text.setAttribute('text-anchor', 'middle')
     text.setAttribute('dominant-baseline', 'central')
+    text.setAttribute('fill', 'white')
     
     group.appendChild(polygon)
     group.appendChild(text)
@@ -175,7 +170,6 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     cameraState.lastDistance = 0
   }
 
-  // Event listeners for the SVG element only
   svg.addEventListener('touchstart', (e) => {
     e.preventDefault()
     if (e.touches.length === 1) {
@@ -213,7 +207,6 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   svg.addEventListener('mouseup', handleEnd)
   svg.addEventListener('mouseleave', handleEnd)
 
-  // Handle window resize
   window.addEventListener('resize', () => {
     const newXOffset = (window.innerWidth - gridWidth) / 2
     const newYOffset = (window.innerHeight - gridHeight) / 2
@@ -222,18 +215,14 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   })
 }
 
-// Initialize navigation with touch events
 document.querySelectorAll('.nav-button').forEach(button => {
   const handleClick = (e: Event) => {
     e.preventDefault()
     const target = e.target as HTMLElement
     const view = target.dataset.view
     if (view) {
-      // Update active button
       document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
       target.classList.add('active')
-      
-      // Update grid
       currentView = view
       initializeGrid(view)
     }
