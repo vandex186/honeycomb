@@ -35,8 +35,8 @@ function initializeGrid(view: string) {
 
   let gridOptions: GridOptions = {
     orientation: Orientation.POINTY,
-    width: 7,
-    height: 7
+    width: 8,
+    height: 8
   }
 
   if (view === 'hero') {
@@ -48,20 +48,35 @@ function initializeGrid(view: string) {
 
   currentGrid = createGrid(gridOptions)
   
-  // Set terrain types
+  // Set terrain types in a specific pattern
   currentGrid.forEach(hex => {
-    // Example terrain distribution - you can modify this logic
-    const random = Math.random()
-    if (random < 0.2) {
+    const { q, r } = hex
+    const distanceFromCenter = Math.max(Math.abs(q - 4), Math.abs(r - 4))
+    
+    // Center castle area
+    if (q >= 3 && q <= 5 && r >= 3 && r <= 5) {
+      if ((q === 4 && r === 4) || (q === 3 && r === 4) || (q === 5 && r === 4) || (q === 4 && r === 3)) {
+        hex.terrain = BUILDING
+      } else {
+        hex.terrain = TREES
+      }
+    }
+    // Water border on top-right
+    else if (q + r > 10) {
       hex.terrain = WATER
-    } else if (random < 0.4) {
-      hex.terrain = TREES
-    } else if (random < 0.5) {
-      hex.terrain = BUILDING
-    } else if (random < 0.6) {
+    }
+    // Roads on left side
+    else if (q < 2 && r > 2 && r < 6) {
       hex.terrain = ROAD
     }
-    // else remains FIELD (default)
+    // Trees on bottom
+    else if (r > 5 && q > 2) {
+      hex.terrain = TREES
+    }
+    // Default to field
+    else {
+      hex.terrain = FIELD
+    }
   })
 
   renderGrid(currentGrid)
@@ -111,7 +126,6 @@ function renderGrid(grid: Grid<CustomHex>) {
 }
 
 function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
-  // Camera control state
   const cameraState = {
     matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
     isDragging: false,
@@ -232,5 +246,4 @@ document.querySelectorAll('.nav-button').forEach(button => {
   button.addEventListener('touchend', handleClick)
 })
 
-// Initial render
 initializeGrid('castle')
