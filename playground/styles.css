@@ -146,26 +146,7 @@ body[data-view="dungeon"] .bottom-area {
 }
 
 .hex-grid polygon {
+  fill: rgba(255, 255, 255, 0.1);
   stroke: rgba(255, 255, 255, 0.5);
   stroke-width: 1;
-}
-
-.hex-grid polygon.trees {
-  fill: #2ecc40;
-}
-
-.hex-grid polygon.water {
-  fill: #0074d9;
-}
-
-.hex-grid polygon.road {
-  fill: #666666;
-}
-
-.hex-grid polygon.building {
-  fill: #e0115f;
-}
-
-.hex-grid polygon.field {
-  fill: #ffeb3b;
 }
