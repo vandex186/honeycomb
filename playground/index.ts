@@ -17,12 +17,45 @@ class CustomHex extends defineHex({
   transformedCoordinates?: { x: number; y: number }
 }
 
-// Grid state
 let currentGrid: Grid<CustomHex>
 let currentView = 'castle'
 
 function createGrid(options: GridOptions) {
-  return new Grid(CustomHex, rectangle({ width: options.width, height: options.height }))
+  const grid = new Grid(CustomHex, rectangle({ width: options.width, height: options.height }))
+  
+  // Create castle layout pattern
+  grid.forEach(hex => {
+    const { q, r } = hex
+    
+    // Center castle with buildings
+    if ((q === 3 && r === 3) || (q === 4 && r === 3) || (q === 3 && r === 4)) {
+      hex.terrain = BUILDING
+    }
+    // Forest ring around castle
+    else if ((q === 2 && r === 3) || (q === 2 && r === 4) || 
+             (q === 3 && r === 2) || (q === 4 && r === 2) ||
+             (q === 5 && r === 3) || (q === 4 && r === 4)) {
+      hex.terrain = TREES
+    }
+    // Water area
+    else if ((q >= 5 && r <= 2) || (q >= 6 && r <= 3)) {
+      hex.terrain = WATER
+    }
+    // Roads
+    else if ((q <= 1 && r >= 2 && r <= 4)) {
+      hex.terrain = ROAD
+    }
+    // Additional trees
+    else if ((q >= 3 && r >= 5) || (q === 2 && r === 5)) {
+      hex.terrain = TREES
+    }
+    // Fields for remaining hexes
+    else {
+      hex.terrain = FIELD
+    }
+  })
+  
+  return grid
 }
 
 function initializeGrid(view: string) {
@@ -33,12 +66,6 @@ function initializeGrid(view: string) {
     container.innerHTML = ''
   }
 
-  let gridOptions: GridOptions = {
-    orientation: Orientation.POINTY,
-    width: 8,
-    height: 8
-  }
-
   if (view === 'hero') {
     if (container) {
       container.innerHTML = '<div style="color: white; font-size: 2rem;">Hero View Coming Soon</div>'
@@ -46,39 +73,13 @@ function initializeGrid(view: string) {
     return
   }
 
-  currentGrid = createGrid(gridOptions)
-  
-  // Set terrain types in a specific pattern
-  currentGrid.forEach(hex => {
-    const { q, r } = hex
-    const distanceFromCenter = Math.max(Math.abs(q - 4), Math.abs(r - 4))
-    
-    // Center castle area
-    if (q >= 3 && q <= 5 && r >= 3 && r <= 5) {
-      if ((q === 4 && r === 4) || (q === 3 && r === 4) || (q === 5 && r === 4) || (q === 4 && r === 3)) {
-        hex.terrain = BUILDING
-      } else {
-        hex.terrain = TREES
-      }
-    }
-    // Water border on top-right
-    else if (q + r > 10) {
-      hex.terrain = WATER
-    }
-    // Roads on left side
-    else if (q < 2 && r > 2 && r < 6) {
-      hex.terrain = ROAD
-    }
-    // Trees on bottom
-    else if (r > 5 && q > 2) {
-      hex.terrain = TREES
-    }
-    // Default to field
-    else {
-      hex.terrain = FIELD
-    }
-  })
+  const gridOptions: GridOptions = {
+    orientation: Orientation.POINTY,
+    width: 8,
+    height: 7
+  }
 
+  currentGrid = createGrid(gridOptions)
   renderGrid(currentGrid)
 }
 
@@ -108,6 +109,8 @@ function renderGrid(grid: Grid<CustomHex>) {
     
     polygon.setAttribute('points', points)
     polygon.setAttribute('fill', `#${hex.terrain.color.toString(16).padStart(6, '0')}`)
+    polygon.setAttribute('stroke', '#333')
+    polygon.setAttribute('stroke-width', '1')
     
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     text.textContent = `${hex.q},${hex.r}`
@@ -116,6 +119,7 @@ function renderGrid(grid: Grid<CustomHex>) {
     text.setAttribute('text-anchor', 'middle')
     text.setAttribute('dominant-baseline', 'central')
     text.setAttribute('fill', 'white')
+    text.setAttribute('font-size', '8')
     
     group.appendChild(polygon)
     group.appendChild(text)
