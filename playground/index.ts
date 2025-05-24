@@ -23,7 +23,6 @@ let currentView = 'castle'
 function createGrid(options: GridOptions) {
   const grid = new Grid(CustomHex, rectangle({ width: options.width, height: options.height }))
   
-  // Create castle layout pattern
   grid.forEach(hex => {
     const { q, r } = hex
     
