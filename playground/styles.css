@@ -134,15 +134,15 @@ body[data-view="dungeon"] .bottom-area {
   height: 100%;
   touch-action: none;
   transform-style: preserve-3d;
-  transform: matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1);
   overflow: visible;
 }
 
 .hex-grid text {
   fill: currentColor;
   user-select: none;
-  font-size: 3vmin;
+  font-size: 0.8rem;
   pointer-events: none;
+  color: white;
 }
 
 .hex-grid polygon {

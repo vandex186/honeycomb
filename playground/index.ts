@@ -1,5 +1,6 @@
 import { defineHex, Grid, rectangle } from '../src'
 import { Orientation } from '../src/hex/types'
+import { BUILDING, FIELD, ROAD, TREES, WATER } from '../examples/line-of-sight/terrain'
 
 interface GridOptions {
   orientation: Orientation
@@ -31,10 +32,7 @@ function createGrid(options: GridOptions) {
 }
 
 function initializeGrid(view: string) {
-  // Set view attribute on body
   document.body.setAttribute('data-view', view)
-
-  // Clear existing grid
   const container = document.getElementById('container')
   if (container) {
     container.innerHTML = ''
@@ -48,6 +46,13 @@ function initializeGrid(view: string) {
         orientation: Orientation.FLAT,
         width: 7,
         height: 7
+      }
+      break
+    case 'chart':
+      gridOptions = {
+        orientation: Orientation.POINTY,
+        width: 8,
+        height: 8
       }
       break
     case 'castle':
@@ -68,14 +73,18 @@ function initializeGrid(view: string) {
   }
 
   currentGrid = createGrid(gridOptions)
-  renderGrid(currentGrid)
+  renderGrid(currentGrid, view)
 }
 
-function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
+function getTerrainType(index: number) {
+  const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
+  return terrains[index % terrains.length]
+}
+
+function renderGrid(grid: Grid<CustomHex | VerticalHex>, view: string) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
-  // Calculate grid dimensions and center offset
   const gridWidth = grid.pixelWidth
   const gridHeight = grid.pixelHeight
   const xOffset = (window.innerWidth - gridWidth) / 2
@@ -87,12 +96,11 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
   svg.classList.add('hex-grid')
   container?.appendChild(svg)
 
-  // Create a group for all hexes and center it
   const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
   gridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
   svg.appendChild(gridGroup)
 
-  // Render hexes
+  let index = 0
   for (const hex of grid) {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
@@ -101,22 +109,30 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>) {
     polygon.setAttribute('points', points)
     
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    text.textContent = `${hex.q},${hex.r}`
+    if (view === 'chart') {
+      const terrain = getTerrainType(index)
+      text.textContent = `${index}\n${terrain.type}`
+      text.setAttribute('y', (hex.y - 10).toString())
+    } else {
+      text.textContent = `${hex.q},${hex.r}`
+      text.setAttribute('y', hex.y.toString())
+    }
     text.setAttribute('x', hex.x.toString())
-    text.setAttribute('y', hex.y.toString())
     text.setAttribute('text-anchor', 'middle')
     text.setAttribute('dominant-baseline', 'central')
     
     group.appendChild(polygon)
     group.appendChild(text)
     gridGroup.appendChild(group)
+    index++
   }
 
-  setupInteractions(svg, gridGroup, gridWidth, gridHeight)
+  if (view !== 'chart') {
+    setupInteractions(svg, gridGroup, gridWidth, gridHeight)
+  }
 }
 
 function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
-  // Camera control state
   const cameraState = {
     matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
     isDragging: false,
@@ -175,7 +191,6 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     cameraState.lastDistance = 0
   }
 
-  // Event listeners for the SVG element only
   svg.addEventListener('touchstart', (e) => {
     e.preventDefault()
     if (e.touches.length === 1) {
@@ -213,7 +228,6 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   svg.addEventListener('mouseup', handleEnd)
   svg.addEventListener('mouseleave', handleEnd)
 
-  // Handle window resize
   window.addEventListener('resize', () => {
     const newXOffset = (window.innerWidth - gridWidth) / 2
     const newYOffset = (window.innerHeight - gridHeight) / 2
@@ -222,18 +236,14 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   })
 }
 
-// Initialize navigation with touch events
 document.querySelectorAll('.nav-button').forEach(button => {
   const handleClick = (e: Event) => {
     e.preventDefault()
     const target = e.target as HTMLElement
     const view = target.dataset.view
     if (view) {
-      // Update active button
       document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
       target.classList.add('active')
-      
-      // Update grid
       currentView = view
       initializeGrid(view)
     }
@@ -243,5 +253,4 @@ document.querySelectorAll('.nav-button').forEach(button => {
   button.addEventListener('touchend', handleClick)
 })
 
-// Initial render
 initializeGrid('castle')
