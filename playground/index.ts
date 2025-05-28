@@ -76,6 +76,17 @@ function initializeGrid(view: string) {
   renderGrid(currentGrid, view)
 }
 
+function getTerrainEmoji(terrain: any) {
+  switch(terrain.type) {
+    case 'Water': return '💧'
+    case 'Field': return '🌾'
+    case 'Road': return '🪨'
+    case 'Trees': return '🌳'
+    case 'Building': return '🏠'
+    default: return ''
+  }
+}
+
 function getTerrainType(index: number) {
   const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
   return terrains[index % terrains.length]
@@ -112,8 +123,20 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, view: string) {
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     if (view === 'chart') {
       const terrain = getTerrainType(index)
-      text.textContent = `${index}\n${terrain.type}`
-      text.setAttribute('y', (hex.y - 10).toString())
+      const cellNumber = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
+      cellNumber.textContent = `${index}`
+      cellNumber.setAttribute('x', hex.x.toString())
+      cellNumber.setAttribute('dy', '-1.2em')
+      cellNumber.classList.add('cell-number')
+      
+      const terrainEmoji = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
+      terrainEmoji.textContent = getTerrainEmoji(terrain)
+      terrainEmoji.setAttribute('x', hex.x.toString())
+      terrainEmoji.setAttribute('dy', '1.5em')
+      
+      text.appendChild(cellNumber)
+      text.appendChild(terrainEmoji)
+      text.setAttribute('y', hex.y.toString())
     } else {
       text.textContent = `${hex.q},${hex.r}`
       text.setAttribute('y', hex.y.toString())
