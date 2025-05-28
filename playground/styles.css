@@ -140,7 +140,7 @@ body[data-view="dungeon"] .bottom-area {
 .hex-grid text {
   fill: currentColor;
   user-select: none;
-  font-size: 0.8rem;
+  font-size: 1.5rem;
   pointer-events: none;
   color: white;
 }
@@ -149,4 +149,8 @@ body[data-view="dungeon"] .bottom-area {
   fill: rgba(255, 255, 255, 0.1);
   stroke: rgba(255, 255, 255, 0.5);
   stroke-width: 1;
+}
+
+.hex-grid .cell-number {
+  opacity: 0;
 }
