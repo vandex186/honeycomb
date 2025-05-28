@@ -94,6 +94,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, view: string) {
   svg.setAttribute('height', '100%')
   svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   svg.classList.add('hex-grid')
+  svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
   container?.appendChild(svg)
 
   const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
@@ -127,9 +128,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, view: string) {
     index++
   }
 
-  if (view !== 'chart') {
-    setupInteractions(svg, gridGroup, gridWidth, gridHeight)
-  }
+  setupInteractions(svg, gridGroup, gridWidth, gridHeight)
 }
 
 function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
