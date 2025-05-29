@@ -1,5 +1,5 @@
 {
-  "name": "goldengoose",
+  "name": "qr-swords",
   "version": "1.0.0",
   "description": "A hexagonal grid game with 3D transformations",
   "private": true,
