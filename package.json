@@ -11,16 +11,16 @@
   },
   "dependencies": {
     "honeycomb-grid": "^4.1.5",
-    "three": "^0.157.0",
+    "three": "^0.159.0",
     "@react-three/fiber": "^8.15.12",
-    "@react-three/drei": "^9.89.0"
+    "@react-three/drei": "^9.92.1"
   },
   "devDependencies": {
     "@svgdotjs/svg.js": "^3.2.0",
-    "@types/three": "^0.157.2",
+    "@types/three": "^0.159.0",
     "abstract-astar": "^0.2.0",
-    "typescript": "^5.1.6",
-    "vite": "^4.4.4",
-    "vite-plugin-dts": "^3.5.1"
+    "typescript": "^5.3.3",
+    "vite": "^5.0.7",
+    "vite-plugin-dts": "^3.6.4"
   }
 }
