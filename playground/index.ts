@@ -51,8 +51,8 @@ function initializeGrid(view: string) {
     case 'chart':
       gridOptions = {
         orientation: Orientation.POINTY,
-        width: 12,
-        height: 12
+        width: 8,
+        height: 8
       }
       break
     case 'castle':
@@ -76,12 +76,6 @@ function initializeGrid(view: string) {
   renderGrid(currentGrid, view)
 }
 
-const CASTLE = {
-  type: 'Castle',
-  passable: false,
-  opaque: true,
-}
-
 function getTerrainEmoji(terrain: any) {
   switch(terrain.type) {
     case 'Water': return '💧'
@@ -89,26 +83,13 @@ function getTerrainEmoji(terrain: any) {
     case 'Road': return '🪨'
     case 'Trees': return '🌳'
     case 'Building': return '🏠'
-    case 'Castle': return '🏰'
     default: return ''
   }
 }
 
-function getTerrainType(index: number, q: number, r: number) {
-  // Center hex becomes castle
-  if (q === 6 && r === 6) {
-    return CASTLE
-  }
-  
+function getTerrainType(index: number) {
   const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
   return terrains[index % terrains.length]
-}
-
-function calculateFogOpacity(q: number, r: number, centerQ: number, centerR: number): number {
-  const distance = Math.sqrt(Math.pow(q - centerQ, 2) + Math.pow(r - centerR, 2))
-  if (distance <= 2) return 0 // Clear visibility
-  if (distance <= 4) return 0.5 // Partial fog
-  return 0.8 // Heavy fog
 }
 
 function renderGrid(grid: Grid<CustomHex | VerticalHex>, view: string) {
@@ -136,16 +117,12 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, view: string) {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
     const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
-    polygon.setAttribute('points', points)
     
-    if (view === 'chart') {
-      const fogOpacity = calculateFogOpacity(hex.q, hex.r, 6, 6)
-      polygon.style.fill = `rgba(0, 0, 0, ${fogOpacity})`
-    }
+    polygon.setAttribute('points', points)
     
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     if (view === 'chart') {
-      const terrain = getTerrainType(index, hex.q, hex.r)
+      const terrain = getTerrainType(index)
       const cellNumber = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
       cellNumber.textContent = `${index}`
       cellNumber.setAttribute('x', hex.x.toString())
