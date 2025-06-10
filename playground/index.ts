@@ -28,7 +28,7 @@ class VerticalHex extends defineHex({
 
 // Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
-let currentView = 'dungeon' // Changed default to dungeon since castle tab is removed
+let currentView = 'dungeon'
 let showCoordinates = false
 let showVisibility = false
 
@@ -502,14 +502,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-document.querySelectorAll('.nav-button').forEach(button => {
-  const handleClick = (e: Event) => {
+// Setup navigation for all buttons (nav-button and nav-circle)
+document.addEventListener('click', (e) => {
+  const target = e.target as HTMLElement
+  
+  // Handle both nav-button and nav-circle clicks
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle')) {
     e.preventDefault()
-    const target = e.target as HTMLElement
     const view = target.dataset.view
     if (view) {
-      document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
-      target.classList.add('active')
+      // Update active state for nav-buttons only
+      if (target.classList.contains('nav-button')) {
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
+        target.classList.add('active')
+      }
+      
       currentView = view
       // Reset states when switching views
       showCoordinates = false
@@ -522,9 +529,34 @@ document.querySelectorAll('.nav-button').forEach(button => {
       initializeGrid(view)
     }
   }
-
-  button.addEventListener('click', handleClick)
-  button.addEventListener('touchend', handleClick)
 })
 
-initializeGrid('dungeon') // Changed default to dungeon
+// Setup touch events for mobile
+document.addEventListener('touchend', (e) => {
+  const target = e.target as HTMLElement
+  
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle')) {
+    e.preventDefault()
+    const view = target.dataset.view
+    if (view) {
+      // Update active state for nav-buttons only
+      if (target.classList.contains('nav-button')) {
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
+        target.classList.add('active')
+      }
+      
+      currentView = view
+      // Reset states when switching views
+      showCoordinates = false
+      showVisibility = false
+      // Reset button states
+      const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+      const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+      if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+      if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+      initializeGrid(view)
+    }
+  }
+})
+
+initializeGrid('dungeon')

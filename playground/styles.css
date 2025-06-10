@@ -118,17 +118,13 @@ body:not([data-view="castle"]) .icon-button {
   right: 0;
   height: 15vh;
   background: rgba(0, 0, 0, 0.8);
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 1000;
   touch-action: manipulation;
   padding: 0 20px;
-}
-
-body[data-view="dungeon"] .bottom-area {
-  display: flex;
 }
 
 .left-controls,
@@ -171,6 +167,23 @@ body[data-view="dungeon"] .bottom-area {
 .control-button.red { background: #ff4444; }
 .control-button.orange { background: #ff8c00; }
 .control-button.blue { background: #4444ff; }
+
+/* Navigation circle buttons */
+.control-button.nav-circle {
+  background: #444;
+  border: 2px solid #666;
+  transition: all 0.3s ease;
+}
+
+.control-button.nav-circle:hover {
+  background: #666;
+  border-color: #888;
+  transform: scale(1.05);
+}
+
+.control-button.nav-circle:active {
+  transform: scale(0.95);
+}
 
 .hex-grid {
   display: block;
