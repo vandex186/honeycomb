@@ -23,8 +23,8 @@ class VerticalHex extends defineHex({
 }
 
 // Grid state
-let currentGrid: Grid<CustomHex | VerticalHex>
-let overlayGrid: Grid<CustomHex | VerticalHex>
+let mainGrid: Grid<CustomHex | VerticalHex>
+let terrainGrid: Grid<CustomHex | VerticalHex>
 let currentView = 'castle'
 let showOverlay = false
 
@@ -74,9 +74,9 @@ function initializeGrid(view: string) {
     return
   }
 
-  currentGrid = createGrid(gridOptions)
-  overlayGrid = createGrid(gridOptions)
-  renderGrid(currentGrid, overlayGrid, view)
+  mainGrid = createGrid(gridOptions)
+  terrainGrid = createGrid(gridOptions)
+  renderGrid(mainGrid, terrainGrid, view)
 }
 
 function getTerrainEmoji(terrain: any) {
@@ -95,7 +95,7 @@ function getTerrainType(index: number) {
   return terrains[index % terrains.length]
 }
 
-function renderGrid(grid: Grid<CustomHex | VerticalHex>, overlay: Grid<CustomHex | VerticalHex>, view: string) {
+function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex | VerticalHex>, view: string) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
@@ -116,12 +116,12 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, overlay: Grid<CustomHex
   gridGroup.setAttribute('id', 'main-grid')
   svg.appendChild(gridGroup)
 
-  // Create overlay group (initially hidden for non-chart views)
-  const overlayGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  overlayGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  overlayGroup.setAttribute('id', 'overlay-grid')
-  overlayGroup.style.display = (view === 'chart' && showOverlay) ? 'block' : 'none'
-  svg.appendChild(overlayGroup)
+  // Create terrain overlay group (initially hidden for non-chart views)
+  const terrainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  terrainGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  terrainGroup.setAttribute('id', 'terrain-grid')
+  terrainGroup.style.display = (view === 'chart' && showOverlay) ? 'block' : 'none'
+  svg.appendChild(terrainGroup)
 
   // Render main grid
   let index = 0
@@ -134,7 +134,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, overlay: Grid<CustomHex
     
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     if (view === 'chart') {
-      const terrain = getTerrainType(index)
+      const terrainType = getTerrainType(index)
       const cellNumber = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
       cellNumber.textContent = `${index}`
       cellNumber.setAttribute('x', hex.x.toString())
@@ -142,7 +142,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, overlay: Grid<CustomHex
       cellNumber.classList.add('cell-number')
       
       const terrainEmoji = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
-      terrainEmoji.textContent = getTerrainEmoji(terrain)
+      terrainEmoji.textContent = getTerrainEmoji(terrainType)
       terrainEmoji.setAttribute('x', hex.x.toString())
       terrainEmoji.setAttribute('dy', '1.5em')
       
@@ -163,15 +163,15 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, overlay: Grid<CustomHex
     index++
   }
 
-  // Render overlay grid (coordinates only, no transformation)
+  // Render terrain grid (coordinates only, no transformation)
   if (view === 'chart') {
-    for (const hex of overlay) {
+    for (const hex of terrain) {
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
       const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
       const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
       
       polygon.setAttribute('points', points)
-      polygon.classList.add('overlay-polygon')
+      polygon.classList.add('terrain-polygon')
       
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       text.textContent = `${hex.q},${hex.r}`
@@ -179,42 +179,15 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, overlay: Grid<CustomHex
       text.setAttribute('y', hex.y.toString())
       text.setAttribute('text-anchor', 'middle')
       text.setAttribute('dominant-baseline', 'central')
-      text.classList.add('overlay-text')
+      text.classList.add('terrain-text')
       
       group.appendChild(polygon)
       group.appendChild(text)
-      overlayGroup.appendChild(group)
+      terrainGroup.appendChild(group)
     }
-
-    // Add toggle button for chart view
-    createOverlayToggleButton(container!)
   }
 
   setupInteractions(svg, gridGroup, gridWidth, gridHeight)
-}
-
-function createOverlayToggleButton(container: HTMLElement) {
-  // Remove existing button if it exists
-  const existingButton = document.getElementById('overlay-toggle')
-  if (existingButton) {
-    existingButton.remove()
-  }
-
-  const button = document.createElement('button')
-  button.id = 'overlay-toggle'
-  button.textContent = showOverlay ? 'Hide Coordinates' : 'Show Coordinates'
-  button.className = 'overlay-toggle-button'
-  
-  button.addEventListener('click', () => {
-    showOverlay = !showOverlay
-    const overlayGroup = document.getElementById('overlay-grid')
-    if (overlayGroup) {
-      overlayGroup.style.display = showOverlay ? 'block' : 'none'
-    }
-    button.textContent = showOverlay ? 'Hide Coordinates' : 'Show Coordinates'
-  })
-
-  container.appendChild(button)
 }
 
 function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
@@ -317,13 +290,29 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     const newXOffset = (window.innerWidth - gridWidth) / 2
     const newYOffset = (window.innerHeight - gridHeight) / 2
     gridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
-    const overlayGroup = document.getElementById('overlay-grid')
-    if (overlayGroup) {
-      overlayGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    const terrainGroup = document.getElementById('terrain-grid')
+    if (terrainGroup) {
+      terrainGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     }
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   })
 }
+
+// Setup overlay toggle button functionality
+document.addEventListener('DOMContentLoaded', () => {
+  const overlayToggle = document.getElementById('overlay-toggle') as HTMLButtonElement
+  
+  if (overlayToggle) {
+    overlayToggle.addEventListener('click', () => {
+      showOverlay = !showOverlay
+      const terrainGroup = document.getElementById('terrain-grid')
+      if (terrainGroup) {
+        terrainGroup.style.display = showOverlay ? 'block' : 'none'
+      }
+      overlayToggle.textContent = showOverlay ? 'Hide Coordinates' : 'Show Coordinates'
+    })
+  }
+})
 
 document.querySelectorAll('.nav-button').forEach(button => {
   const handleClick = (e: Event) => {
@@ -336,6 +325,10 @@ document.querySelectorAll('.nav-button').forEach(button => {
       currentView = view
       // Reset overlay state when switching views
       showOverlay = false
+      const overlayToggle = document.getElementById('overlay-toggle') as HTMLButtonElement
+      if (overlayToggle) {
+        overlayToggle.textContent = 'Show Coordinates'
+      }
       initializeGrid(view)
     }
   }
