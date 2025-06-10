@@ -192,25 +192,23 @@ function renderGrids(view: string) {
     index++
   }
 
-  // Render number grid (numbers only)
-  if (view === 'chart') {
-    let numberIndex = 0
-    for (const hex of numberGrid) {
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      text.textContent = `${numberIndex}`
-      text.setAttribute('x', hex.x.toString())
-      text.setAttribute('y', hex.y.toString())
-      text.setAttribute('text-anchor', 'middle')
-      text.setAttribute('dominant-baseline', 'central')
-      text.style.fill = 'white'
-      text.style.fontSize = '1.5rem'
-      text.style.opacity = '0.5'
-      text.style.userSelect = 'none'
-      text.style.pointerEvents = 'none'
-      
-      numberGridGroup.appendChild(text)
-      numberIndex++
-    }
+  // Render number grid (numbers only) - ALWAYS VISIBLE
+  let numberIndex = 0
+  for (const hex of numberGrid) {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    text.textContent = `${numberIndex}`
+    text.setAttribute('x', hex.x.toString())
+    text.setAttribute('y', hex.y.toString())
+    text.setAttribute('text-anchor', 'middle')
+    text.setAttribute('dominant-baseline', 'central')
+    text.style.fill = 'white'
+    text.style.fontSize = '1.5rem'
+    text.style.opacity = '0.8'
+    text.style.userSelect = 'none'
+    text.style.pointerEvents = 'none'
+    
+    numberGridGroup.appendChild(text)
+    numberIndex++
   }
 
   // Render terrain grid (face-to-camera, no transformation)
@@ -387,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (coordinatesToggle) {
     coordinatesToggle.addEventListener('click', () => {
       showCoordinates = !showCoordinates
+      coordinatesToggle.style.background = showCoordinates ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
       const terrainGridGroup = document.getElementById('terrain-grid')
       if (terrainGridGroup) {
         terrainGridGroup.style.display = (currentView === 'chart' && showCoordinates) ? 'block' : 'none'
@@ -397,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (visibilityToggle) {
     visibilityToggle.addEventListener('click', () => {
       showVisibility = !showVisibility
+      visibilityToggle.style.background = showVisibility ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
       const visibilityGridGroup = document.getElementById('visibility-grid')
       if (visibilityGridGroup) {
         visibilityGridGroup.style.display = (currentView === 'chart' && showVisibility) ? 'block' : 'none'
@@ -417,6 +417,11 @@ document.querySelectorAll('.nav-button').forEach(button => {
       // Reset states when switching views
       showCoordinates = false
       showVisibility = false
+      // Reset button states
+      const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+      const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+      if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+      if (visibilityToggle) visibilityToggle.style.background = 'transparent'
       initializeGrid(view)
     }
   }
