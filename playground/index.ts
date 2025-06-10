@@ -33,7 +33,45 @@ let currentView = 'castle'
 let showCoordinates = false
 let showVisibility = false
 
+function createHexagonalGrid(options: GridOptions) {
+  const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
+  const hexes: (CustomHex | VerticalHex)[] = []
+  
+  // Create hexagonal pattern:
+  // Row 0: 1 hex
+  // Row 1: 2 hexes  
+  // Row 2: 3 hexes
+  // Row 3: 4 hexes (center row)
+  // Row 4: 3 hexes
+  // Row 5: 2 hexes
+  // Row 6: 1 hex
+  
+  const rows = [
+    { count: 1, startQ: 0 },    // Row 0: 1 hex at q=0
+    { count: 2, startQ: -1 },   // Row 1: 2 hexes at q=-1,0
+    { count: 3, startQ: -1 },   // Row 2: 3 hexes at q=-1,0,1
+    { count: 4, startQ: -2 },   // Row 3: 4 hexes at q=-2,-1,0,1
+    { count: 3, startQ: -1 },   // Row 4: 3 hexes at q=-1,0,1
+    { count: 2, startQ: -1 },   // Row 5: 2 hexes at q=-1,0
+    { count: 1, startQ: 0 }     // Row 6: 1 hex at q=0
+  ]
+  
+  for (let r = 0; r < rows.length; r++) {
+    const { count, startQ } = rows[r]
+    for (let i = 0; i < count; i++) {
+      const q = startQ + i
+      hexes.push(new HexClass([q, r]))
+    }
+  }
+  
+  return new Grid(HexClass, hexes)
+}
+
 function createGrid(options: GridOptions) {
+  if (options.width === 7 && options.height === 7) {
+    return createHexagonalGrid(options)
+  }
+  
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
 }
@@ -109,7 +147,13 @@ function getTerrainEmoji(terrain: any) {
 }
 
 function getTerrainType(index: number) {
-  const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
+  // Set specific hexes as roads (57, 58, 59, 60, 61, 62)
+  const roadIndices = [57, 58, 59, 60, 61, 62]
+  if (roadIndices.includes(index)) {
+    return ROAD
+  }
+  
+  const terrains = [FIELD, WATER, TREES, BUILDING]
   return terrains[index % terrains.length]
 }
 
