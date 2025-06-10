@@ -124,9 +124,9 @@ function initializeGrid(view: string) {
       
       // Set visibility based on ring distance
       if (customHex.radialDistance === 5) {
-        customHex.visibility = 'undiscovered'  // All 5 ring - undiscoverable
-      } else if (customHex.radialDistance === 3 || customHex.radialDistance === 4) {
-        customHex.visibility = 'discovered'    // All 4 and 3 ring - discoverable
+        customHex.visibility = 'undiscovered'  // Ring 5 - Dark (undiscovered) #000 80%
+      } else if (customHex.radialDistance === 2 || customHex.radialDistance === 3 || customHex.radialDistance === 4) {
+        customHex.visibility = 'discovered'    // Rings 2-3-4 - transparency 100% (discovered)
       } else {
         customHex.visibility = 'visible'       // Other rings - visible
       }
@@ -265,10 +265,13 @@ function renderGrid(view: string) {
       overlay.style.stroke = 'none'
       
       if (customHex.visibility === 'undiscovered') {
+        // Ring 5 - Dark (undiscovered) #000 80%
         overlay.style.fill = 'rgba(0, 0, 0, 0.8)'
       } else if (customHex.visibility === 'discovered') {
-        overlay.style.fill = 'rgba(0, 255, 0, 0.1)'
+        // Rings 2-3-4 - transparency 100% (discovered) - completely transparent
+        overlay.style.fill = 'rgba(0, 0, 0, 0)'
       } else if (customHex.visibility === 'visible') {
+        // Other rings - visible (light overlay)
         overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
       }
       
