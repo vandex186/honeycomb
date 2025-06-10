@@ -93,8 +93,8 @@ function initializeGrid(view: string) {
     case 'chart':
       gridOptions = {
         orientation: Orientation.POINTY,
-        width: 8,
-        height: 8
+        width: 11,  // Increased to accommodate 5 rings
+        height: 11  // Increased to accommodate 5 rings
       }
       break
     case 'castle':
@@ -121,7 +121,8 @@ function initializeGrid(view: string) {
   
   // Calculate radial distances for chart view
   if (view === 'chart') {
-    const castleIndex = 36
+    // Castle is now at the center of the 11x11 grid
+    const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
     let index = 0
     for (const hex of mainGrid) {
       const customHex = hex as CustomHex | VerticalHex
@@ -163,8 +164,21 @@ function getTerrainEmoji(terrain: any) {
   }
 }
 
-function getTerrainType(index: number) {
-  // Special cases for specific hexes
+function getTerrainType(index: number, radialDistance?: number) {
+  // For chart view, use ring-based terrain assignment
+  if (radialDistance !== undefined) {
+    switch (radialDistance) {
+      case 0: return CASTLE  // Center - Castle
+      case 1: return FIELD   // Ring 1 - Fields around castle
+      case 2: return FIELD   // Ring 2 - All fields
+      case 3: return TREES   // Ring 3 - All forest
+      case 4: return WATER   // Ring 4 - All water
+      case 5: return TREES   // Ring 5 - All forest (outer ring)
+      default: return FIELD  // Fallback
+    }
+  }
+  
+  // For other views, use the original logic
   if (index === 36) {
     return CASTLE
   }
@@ -235,6 +249,7 @@ function renderGrids(view: string) {
   // Render main grid (terrain background colors only)
   let index = 0
   for (const hex of mainGrid) {
+    const customHex = hex as CustomHex | VerticalHex
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
     const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
@@ -243,7 +258,7 @@ function renderGrids(view: string) {
     
     // Add terrain background color for chart view
     if (view === 'chart') {
-      const terrainType = getTerrainType(index)
+      const terrainType = getTerrainType(index, customHex.radialDistance)
       const terrainColor = getTerrainColor(terrainType)
       polygon.style.fill = terrainColor
     } else {
@@ -278,7 +293,7 @@ function renderGrids(view: string) {
     text.setAttribute('y', hex.y.toString())
     text.setAttribute('text-anchor', 'middle')
     text.setAttribute('dominant-baseline', 'central')
-    text.style.fontSize = '1.5rem'
+    text.style.fontSize = '1rem'
     text.style.opacity = '1'
     text.style.userSelect = 'none'
     text.style.pointerEvents = 'none'
@@ -291,9 +306,10 @@ function renderGrids(view: string) {
   if (view === 'chart') {
     let terrainIndex = 0
     for (const hex of terrainGrid) {
+      const customHex = hex as CustomHex | VerticalHex
       // Create face-to-camera text with terrain emoji
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      const terrainType = getTerrainType(terrainIndex)
+      const terrainType = getTerrainType(terrainIndex, customHex.radialDistance)
       text.textContent = getTerrainEmoji(terrainType)
       text.setAttribute('x', hex.x.toString())
       text.setAttribute('y', hex.y.toString())
