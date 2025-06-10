@@ -236,14 +236,15 @@ function renderGrids(view: string) {
   if (view === 'chart') {
     for (const hex of visibilityGrid) {
       const visHex = hex as CustomHex | VerticalHex
-      if (visHex.visibility === 'undiscovered') continue // Skip undiscovered hexes
       
       const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
       const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
       
       polygon.setAttribute('points', points)
       
-      if (visHex.visibility === 'discovered') {
+      if (visHex.visibility === 'undiscovered') {
+        polygon.classList.add('visibility-undiscovered')
+      } else if (visHex.visibility === 'discovered') {
         polygon.classList.add('visibility-discovered')
       } else {
         polygon.classList.add('visibility-visible')
