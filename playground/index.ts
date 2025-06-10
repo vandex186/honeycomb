@@ -122,15 +122,13 @@ function initializeGrid(view: string) {
       const customHex = hex as CustomHex | VerticalHex
       customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
       
-      // Initialize visibility states randomly for demo - ONLY for hexes within ring 4
-      if (customHex.radialDistance <= 4) {
-        const rand = Math.random()
-        if (rand < 0.3) customHex.visibility = 'undiscovered'
-        else if (rand < 0.7) customHex.visibility = 'discovered'
-        else customHex.visibility = 'visible'
+      // Set visibility based on ring distance
+      if (customHex.radialDistance === 5) {
+        customHex.visibility = 'undiscovered'  // All 5 ring - undiscoverable
+      } else if (customHex.radialDistance === 3 || customHex.radialDistance === 4) {
+        customHex.visibility = 'discovered'    // All 4 and 3 ring - discoverable
       } else {
-        // For hexes outside ring 4, set default visibility
-        customHex.visibility = 'visible'
+        customHex.visibility = 'visible'       // Other rings - visible
       }
       
       index++
@@ -277,7 +275,7 @@ function renderGrid(view: string) {
       group.appendChild(overlay)
     }
     
-    // Add number text
+    // Add number text (centered vertically)
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
     // Use radial distance for chart view, regular index for others
@@ -291,10 +289,11 @@ function renderGrid(view: string) {
     }
     
     numberText.setAttribute('x', hex.x.toString())
-    numberText.setAttribute('y', (hex.y - 8).toString()) // Offset up slightly
+    numberText.setAttribute('y', hex.y.toString()) // Centered vertically
     numberText.setAttribute('text-anchor', 'middle')
     numberText.setAttribute('dominant-baseline', 'central')
-    numberText.style.fontSize = '1rem'
+    numberText.style.fontSize = '0.8rem' // Smaller font size
+    numberText.style.fill = 'black' // Black color
     numberText.style.userSelect = 'none'
     numberText.style.pointerEvents = 'none'
     
@@ -304,16 +303,23 @@ function renderGrid(view: string) {
     if (view === 'chart' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
       const terrainText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       const terrainType = getTerrainType(index, customHex.radialDistance)
-      terrainText.textContent = getTerrainEmoji(terrainType)
+      const emoji = getTerrainEmoji(terrainType)
+      
+      // Make castle emoji bigger
+      if (terrainType.type === 'Castle') {
+        terrainText.textContent = emoji
+        terrainText.style.fontSize = '2.5rem' // Bigger castle emoji
+      } else {
+        terrainText.textContent = emoji
+        terrainText.style.fontSize = '2rem' // Bigger terrain emojis
+      }
+      
       terrainText.setAttribute('x', hex.x.toString())
-      terrainText.setAttribute('y', (hex.y + 8).toString()) // Offset down slightly
+      terrainText.setAttribute('y', (hex.y + 15).toString()) // Offset down more
       terrainText.setAttribute('text-anchor', 'middle')
       terrainText.setAttribute('dominant-baseline', 'central')
-      terrainText.style.fontSize = '1.5rem'
       terrainText.style.userSelect = 'none'
       terrainText.style.pointerEvents = 'none'
-      terrainText.style.fill = '#ffff00'
-      terrainText.style.fontWeight = 'bold'
       
       group.appendChild(terrainText)
     }
