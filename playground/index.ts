@@ -204,6 +204,11 @@ function getTerrainColor(terrain: any): string {
   }
 }
 
+function shouldHideHex(radialDistance?: number): boolean {
+  // Hide hexes with radial distance 6 or 7
+  return radialDistance !== undefined && radialDistance >= 6
+}
+
 function renderGrids(view: string) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -250,6 +255,13 @@ function renderGrids(view: string) {
   let index = 0
   for (const hex of mainGrid) {
     const customHex = hex as CustomHex | VerticalHex
+    
+    // Skip rendering hexes with radial distance 6 or 7 in chart view
+    if (view === 'chart' && shouldHideHex(customHex.radialDistance)) {
+      index++
+      continue
+    }
+    
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
     const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
@@ -277,6 +289,13 @@ function renderGrids(view: string) {
   let numberIndex = 0
   for (const hex of numberGrid) {
     const customHex = hex as CustomHex | VerticalHex
+    
+    // Skip rendering numbers for hexes with radial distance 6 or 7 in chart view
+    if (view === 'chart' && shouldHideHex(customHex.radialDistance)) {
+      numberIndex++
+      continue
+    }
+    
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
     // Use radial distance for chart view, regular index for others
@@ -307,6 +326,13 @@ function renderGrids(view: string) {
     let terrainIndex = 0
     for (const hex of terrainGrid) {
       const customHex = hex as CustomHex | VerticalHex
+      
+      // Skip rendering terrain for hexes with radial distance 6 or 7
+      if (shouldHideHex(customHex.radialDistance)) {
+        terrainIndex++
+        continue
+      }
+      
       // Create face-to-camera text with terrain emoji
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       const terrainType = getTerrainType(terrainIndex, customHex.radialDistance)
@@ -326,6 +352,11 @@ function renderGrids(view: string) {
   if (view === 'chart') {
     for (const hex of visibilityGrid) {
       const visHex = hex as CustomHex | VerticalHex
+      
+      // Skip rendering visibility for hexes with radial distance 6 or 7
+      if (shouldHideHex(visHex.radialDistance)) {
+        continue
+      }
       
       const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
       const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
