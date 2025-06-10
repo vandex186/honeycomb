@@ -28,7 +28,7 @@ class VerticalHex extends defineHex({
 
 // Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
-let currentView = 'castle'
+let currentView = 'dungeon' // Changed default to dungeon since castle tab is removed
 let showCoordinates = false
 let showVisibility = false
 
@@ -87,14 +87,13 @@ function initializeGrid(view: string) {
         height: 7
       }
       break
-    case 'chart':
+    case 'castle': // This is now the chart view (renamed)
       gridOptions = {
         orientation: Orientation.POINTY,
         width: 11,  // Increased to accommodate 5 rings
         height: 11  // Increased to accommodate 5 rings
       }
       break
-    case 'castle':
     default:
       gridOptions = {
         orientation: Orientation.POINTY,
@@ -113,8 +112,8 @@ function initializeGrid(view: string) {
 
   mainGrid = createGrid(gridOptions)
   
-  // Calculate radial distances and initialize visibility for chart view
-  if (view === 'chart') {
+  // Calculate radial distances and initialize visibility for castle view (formerly chart)
+  if (view === 'castle') {
     // Castle is now at the center of the 11x11 grid
     const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
     let index = 0
@@ -151,7 +150,7 @@ function getTerrainEmoji(terrain: any) {
 }
 
 function getTerrainType(index: number, radialDistance?: number) {
-  // For chart view, use ring-based terrain assignment
+  // For castle view (formerly chart), use ring-based terrain assignment
   if (radialDistance !== undefined) {
     switch (radialDistance) {
       case 0: return CASTLE  // Center - Castle
@@ -239,8 +238,8 @@ function renderGrid(view: string) {
   for (const hex of mainGrid) {
     const customHex = hex as CustomHex | VerticalHex
     
-    // Skip rendering hexes with radial distance 6 or 7 in chart view
-    if (view === 'chart' && shouldHideHex(customHex.radialDistance)) {
+    // Skip rendering hexes with radial distance 6 or 7 in castle view
+    if (view === 'castle' && shouldHideHex(customHex.radialDistance)) {
       index++
       continue
     }
@@ -251,8 +250,8 @@ function renderGrid(view: string) {
     
     polygon.setAttribute('points', points)
     
-    // Add terrain background color for chart view
-    if (view === 'chart') {
+    // Add terrain background color for castle view
+    if (view === 'castle') {
       const terrainType = getTerrainType(index, customHex.radialDistance)
       const terrainColor = getTerrainColor(terrainType)
       polygon.style.fill = terrainColor
@@ -268,8 +267,8 @@ function renderGrid(view: string) {
     // Add number text (centered vertically) with 20% transparency
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
-    // Use radial distance for chart view, regular index for others
-    if (view === 'chart' && customHex.radialDistance !== undefined) {
+    // Use radial distance for castle view, regular index for others
+    if (view === 'castle' && customHex.radialDistance !== undefined) {
       numberText.textContent = `${customHex.radialDistance}`
       numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
       numberText.style.fontWeight = 'bold'
@@ -288,8 +287,8 @@ function renderGrid(view: string) {
     
     group.appendChild(numberText)
     
-    // Add terrain emoji if coordinates are enabled and in chart view
-    if (view === 'chart' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
+    // Add terrain emoji if coordinates are enabled and in castle view
+    if (view === 'castle' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
       const terrainText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       const terrainType = getTerrainType(index, customHex.radialDistance)
       const emoji = getTerrainEmoji(terrainType)
@@ -318,12 +317,12 @@ function renderGrid(view: string) {
   }
 
   // Render fog of war overlay (separate from main grid)
-  if (view === 'chart' && showVisibility) {
+  if (view === 'castle' && showVisibility) {
     let overlayIndex = 0
     for (const hex of mainGrid) {
       const customHex = hex as CustomHex | VerticalHex
       
-      // Skip rendering hexes with radial distance 6 or 7 in chart view
+      // Skip rendering hexes with radial distance 6 or 7 in castle view
       if (shouldHideHex(customHex.radialDistance)) {
         overlayIndex++
         continue
@@ -485,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showCoordinates = !showCoordinates
       coordinatesToggle.style.background = showCoordinates ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
       // Re-render the grid to show/hide terrain emojis
-      if (currentView === 'chart') {
+      if (currentView === 'castle') {
         renderGrid(currentView)
       }
     })
@@ -496,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showVisibility = !showVisibility
       visibilityToggle.style.background = showVisibility ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
       // Re-render the grid to show/hide visibility overlays
-      if (currentView === 'chart') {
+      if (currentView === 'castle') {
         renderGrid(currentView)
       }
     })
@@ -528,4 +527,4 @@ document.querySelectorAll('.nav-button').forEach(button => {
   button.addEventListener('touchend', handleClick)
 })
 
-initializeGrid('castle')
+initializeGrid('dungeon') // Changed default to dungeon
