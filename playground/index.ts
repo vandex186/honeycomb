@@ -33,39 +33,46 @@ let currentView = 'castle'
 let showCoordinates = false
 let showVisibility = false
 
-function createCustomGrid(options: GridOptions) {
+function createHexagonalGrid(options: GridOptions) {
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
   const hexes: (CustomHex | VerticalHex)[] = []
   
-  // Create standard rectangular grid first
-  const standardGrid = new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
+  // Create hexagonal pattern:
+  // Row 0: 1 hex
+  // Row 1: 2 hexes  
+  // Row 2: 3 hexes
+  // Row 3: 4 hexes (center row)
+  // Row 4: 3 hexes
+  // Row 5: 2 hexes
+  // Row 6: 1 hex
   
-  // Add all hexes from standard grid
-  for (const hex of standardGrid) {
-    hexes.push(hex)
+  const rows = [
+    { count: 1, startQ: 0 },    // Row 0: 1 hex at q=0
+    { count: 2, startQ: -1 },   // Row 1: 2 hexes at q=-1,0
+    { count: 3, startQ: -1 },   // Row 2: 3 hexes at q=-1,0,1
+    { count: 4, startQ: -2 },   // Row 3: 4 hexes at q=-2,-1,0,1
+    { count: 3, startQ: -1 },   // Row 4: 3 hexes at q=-1,0,1
+    { count: 2, startQ: -1 },   // Row 5: 2 hexes at q=-1,0
+    { count: 1, startQ: 0 }     // Row 6: 1 hex at q=0
+  ]
+  
+  for (let r = 0; r < rows.length; r++) {
+    const { count, startQ } = rows[r]
+    for (let i = 0; i < count; i++) {
+      const q = startQ + i
+      hexes.push(new HexClass([q, r]))
+    }
   }
-  
-  // Add specific additional hexes:
-  // 1. Add hex #8 after #7 in same line (row 0)
-  // Hex #7 is at [0, 1], so add hex at [1, 1] 
-  hexes.push(new HexClass([1, 1]))
-  
-  // 2. Add one hex before #8 in line 2 (row 1)
-  // This would be at [-1, 1]
-  hexes.push(new HexClass([-1, 1]))
   
   return new Grid(HexClass, hexes)
 }
 
 function createGrid(options: GridOptions) {
-  const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
-  
-  // For castle and dungeon views, use custom grid with additional hexes
   if (options.width === 7 && options.height === 7) {
-    return createCustomGrid(options)
+    return createHexagonalGrid(options)
   }
   
-  // For chart view, use standard rectangular grid
+  const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
 }
 
@@ -140,7 +147,13 @@ function getTerrainEmoji(terrain: any) {
 }
 
 function getTerrainType(index: number) {
-  const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
+  // Set specific hexes as roads (57, 58, 59, 60, 61, 62)
+  const roadIndices = [57, 58, 59, 60, 61, 62]
+  if (roadIndices.includes(index)) {
+    return ROAD
+  }
+  
+  const terrains = [FIELD, WATER, TREES, BUILDING]
   return terrains[index % terrains.length]
 }
 
