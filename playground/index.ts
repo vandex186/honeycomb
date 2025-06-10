@@ -195,9 +195,9 @@ function shouldHideHex(radialDistance?: number): boolean {
   return radialDistance !== undefined && radialDistance >= 6
 }
 
-// Check if hex should show button effects (only within ring 4)
+// Check if hex should show button effects (now includes ring 5)
 function shouldShowButtonEffects(radialDistance?: number): boolean {
-  return radialDistance !== undefined && radialDistance <= 4
+  return radialDistance !== undefined && radialDistance <= 5
 }
 
 function renderGrid(view: string) {
@@ -278,17 +278,17 @@ function renderGrid(view: string) {
       group.appendChild(overlay)
     }
     
-    // Add number text (centered vertically)
+    // Add number text (centered vertically) with 20% transparency
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
     // Use radial distance for chart view, regular index for others
     if (view === 'chart' && customHex.radialDistance !== undefined) {
       numberText.textContent = `${customHex.radialDistance}`
-      numberText.style.fill = 'yellow'  // Make radial distances more visible
+      numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
       numberText.style.fontWeight = 'bold'
     } else {
       numberText.textContent = `${index}`
-      numberText.style.fill = 'white'
+      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'  // White with 20% transparency
     }
     
     numberText.setAttribute('x', hex.x.toString())
@@ -296,7 +296,6 @@ function renderGrid(view: string) {
     numberText.setAttribute('text-anchor', 'middle')
     numberText.setAttribute('dominant-baseline', 'central')
     numberText.style.fontSize = '0.8rem' // Smaller font size
-    numberText.style.fill = 'black' // Black color
     numberText.style.userSelect = 'none'
     numberText.style.pointerEvents = 'none'
     
