@@ -173,7 +173,7 @@ body[data-view="dungeon"] .bottom-area {
 .hex-grid text {
   fill: currentColor;
   user-select: none;
-  font-size: 1.5rem;
+  font-size: 1rem; /* Reduced from 1.5rem to 1rem */
   pointer-events: none;
   color: white;
 }
@@ -192,7 +192,7 @@ body[data-view="dungeon"] .bottom-area {
 .terrain-text {
   fill: #ffff00 !important;
   font-weight: bold !important;
-  font-size: 2rem !important;
+  font-size: 1.5rem !important; /* Reduced from 2rem to 1.5rem */
   user-select: none !important;
   pointer-events: none !important;
 }
