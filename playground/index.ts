@@ -26,6 +26,7 @@ class VerticalHex extends defineHex({
 
 // Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
+let numberGrid: Grid<CustomHex | VerticalHex>
 let terrainGrid: Grid<CustomHex | VerticalHex>
 let visibilityGrid: Grid<CustomHex | VerticalHex>
 let currentView = 'castle'
@@ -79,6 +80,7 @@ function initializeGrid(view: string) {
   }
 
   mainGrid = createGrid(gridOptions)
+  numberGrid = createGrid(gridOptions)
   terrainGrid = createGrid(gridOptions)
   visibilityGrid = createGrid(gridOptions)
   
@@ -92,7 +94,7 @@ function initializeGrid(view: string) {
     index++
   }
   
-  renderGrid(mainGrid, terrainGrid, visibilityGrid, view)
+  renderGrids(view)
 }
 
 function getTerrainEmoji(terrain: any) {
@@ -116,23 +118,18 @@ function getTerrainColor(terrain: any): string {
     case 'Building': return '#616161'
     case 'Road': return '#181818'
     case 'Trees': return '#11580f'
-    case 'Field': return '#11580f'
+    case 'Field': return '#dcc60a'
     case 'Water': return '#0d73c9'
     default: return '#ffffff'
   }
 }
 
-function renderGrid(
-  grid: Grid<CustomHex | VerticalHex>, 
-  terrain: Grid<CustomHex | VerticalHex>,
-  visibility: Grid<CustomHex | VerticalHex>,
-  view: string
-) {
+function renderGrids(view: string) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
-  const gridWidth = grid.pixelWidth
-  const gridHeight = grid.pixelHeight
+  const gridWidth = mainGrid.pixelWidth
+  const gridHeight = mainGrid.pixelHeight
   const xOffset = (window.innerWidth - gridWidth) / 2
   const yOffset = (window.innerHeight - gridHeight) / 2
 
@@ -143,32 +140,35 @@ function renderGrid(
   svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
   container?.appendChild(svg)
 
-  // Main grid group
-  const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  gridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  gridGroup.setAttribute('id', 'main-grid')
-  svg.appendChild(gridGroup)
+  // Main grid group (with 3D transformation)
+  const mainGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  mainGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  mainGridGroup.setAttribute('id', 'main-grid')
+  svg.appendChild(mainGridGroup)
 
-  // Terrain grid group (no transformation)
-  const terrainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  terrainGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  terrainGroup.setAttribute('id', 'terrain-grid')
-  terrainGroup.style.display = (view === 'chart' && showCoordinates) ? 'block' : 'none'
-  // Remove transformation for terrain grid
-  terrainGroup.style.transform = 'none'
-  terrainGroup.style.transformStyle = 'flat'
-  svg.appendChild(terrainGroup)
+  // Number grid group (with 3D transformation)
+  const numberGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  numberGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  numberGridGroup.setAttribute('id', 'number-grid')
+  svg.appendChild(numberGridGroup)
 
-  // Visibility grid group
-  const visibilityGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  visibilityGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  visibilityGroup.setAttribute('id', 'visibility-grid')
-  visibilityGroup.style.display = (view === 'chart' && showVisibility) ? 'block' : 'none'
-  svg.appendChild(visibilityGroup)
+  // Terrain grid group (NO transformation - face to camera)
+  const terrainGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  terrainGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  terrainGridGroup.setAttribute('id', 'terrain-grid')
+  terrainGridGroup.style.display = (view === 'chart' && showCoordinates) ? 'block' : 'none'
+  svg.appendChild(terrainGridGroup)
 
-  // Render main grid
+  // Visibility grid group (with 3D transformation)
+  const visibilityGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  visibilityGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  visibilityGridGroup.setAttribute('id', 'visibility-grid')
+  visibilityGridGroup.style.display = (view === 'chart' && showVisibility) ? 'block' : 'none'
+  svg.appendChild(visibilityGridGroup)
+
+  // Render main grid (terrain background colors only)
   let index = 0
-  for (const hex of grid) {
+  for (const hex of mainGrid) {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
     const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
@@ -180,51 +180,43 @@ function renderGrid(
       const terrainType = getTerrainType(index)
       const terrainColor = getTerrainColor(terrainType)
       polygon.style.fill = terrainColor
+    } else {
+      polygon.style.fill = 'rgba(255, 255, 255, 0.1)'
     }
     
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    if (view === 'chart') {
-      const terrainType = getTerrainType(index)
-      const cellNumber = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
-      cellNumber.textContent = `${index}`
-      cellNumber.setAttribute('x', hex.x.toString())
-      cellNumber.setAttribute('dy', '-1.2em')
-      cellNumber.classList.add('cell-number')
-      cellNumber.style.opacity = '0.5' // 50% transparency
-      
-      const terrainEmoji = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
-      terrainEmoji.textContent = getTerrainEmoji(terrainType)
-      terrainEmoji.setAttribute('x', hex.x.toString())
-      terrainEmoji.setAttribute('dy', '1.5em')
-      
-      text.appendChild(cellNumber)
-      text.appendChild(terrainEmoji)
-      text.setAttribute('y', hex.y.toString())
-    } else {
-      text.textContent = `${hex.q},${hex.r}`
-      text.setAttribute('y', hex.y.toString())
-    }
-    text.setAttribute('x', hex.x.toString())
-    text.setAttribute('text-anchor', 'middle')
-    text.setAttribute('dominant-baseline', 'central')
+    polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
+    polygon.style.strokeWidth = '1'
     
     group.appendChild(polygon)
-    group.appendChild(text)
-    gridGroup.appendChild(group)
+    mainGridGroup.appendChild(group)
     index++
+  }
+
+  // Render number grid (numbers only)
+  if (view === 'chart') {
+    let numberIndex = 0
+    for (const hex of numberGrid) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      text.textContent = `${numberIndex}`
+      text.setAttribute('x', hex.x.toString())
+      text.setAttribute('y', hex.y.toString())
+      text.setAttribute('text-anchor', 'middle')
+      text.setAttribute('dominant-baseline', 'central')
+      text.style.fill = 'white'
+      text.style.fontSize = '1.5rem'
+      text.style.opacity = '0.5'
+      text.style.userSelect = 'none'
+      text.style.pointerEvents = 'none'
+      
+      numberGridGroup.appendChild(text)
+      numberIndex++
+    }
   }
 
   // Render terrain grid (face-to-camera, no transformation)
   if (view === 'chart') {
     let terrainIndex = 0
-    for (const hex of terrain) {
-      const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-      const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
-      
-      polygon.setAttribute('points', points)
-      polygon.classList.add('terrain-polygon')
-      
+    for (const hex of terrainGrid) {
       // Create face-to-camera text with terrain emoji
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       const terrainType = getTerrainType(terrainIndex)
@@ -234,24 +226,18 @@ function renderGrid(
       text.setAttribute('text-anchor', 'middle')
       text.setAttribute('dominant-baseline', 'central')
       text.classList.add('terrain-text')
-      // Ensure no transformation is applied to this text
-      text.style.transform = 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
-      text.style.transformStyle = 'flat'
       
-      group.appendChild(polygon)
-      group.appendChild(text)
-      terrainGroup.appendChild(group)
+      terrainGridGroup.appendChild(text)
       terrainIndex++
     }
   }
 
   // Render visibility grid
   if (view === 'chart') {
-    for (const hex of visibility) {
+    for (const hex of visibilityGrid) {
       const visHex = hex as CustomHex | VerticalHex
       if (visHex.visibility === 'undiscovered') continue // Skip undiscovered hexes
       
-      const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
       const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
       const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
       
@@ -263,12 +249,11 @@ function renderGrid(
         polygon.classList.add('visibility-visible')
       }
       
-      group.appendChild(polygon)
-      visibilityGroup.appendChild(group)
+      visibilityGridGroup.appendChild(polygon)
     }
   }
 
-  setupInteractions(svg, gridGroup, gridWidth, gridHeight)
+  setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
 }
 
 function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
@@ -370,15 +355,25 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   window.addEventListener('resize', () => {
     const newXOffset = (window.innerWidth - gridWidth) / 2
     const newYOffset = (window.innerHeight - gridHeight) / 2
-    gridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
-    const terrainGroup = document.getElementById('terrain-grid')
-    const visibilityGroup = document.getElementById('visibility-grid')
-    if (terrainGroup) {
-      terrainGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    
+    const mainGridGroup = document.getElementById('main-grid')
+    const numberGridGroup = document.getElementById('number-grid')
+    const terrainGridGroup = document.getElementById('terrain-grid')
+    const visibilityGridGroup = document.getElementById('visibility-grid')
+    
+    if (mainGridGroup) {
+      mainGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     }
-    if (visibilityGroup) {
-      visibilityGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    if (numberGridGroup) {
+      numberGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     }
+    if (terrainGridGroup) {
+      terrainGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    }
+    if (visibilityGridGroup) {
+      visibilityGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    }
+    
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   })
 }
@@ -391,9 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (coordinatesToggle) {
     coordinatesToggle.addEventListener('click', () => {
       showCoordinates = !showCoordinates
-      const terrainGroup = document.getElementById('terrain-grid')
-      if (terrainGroup) {
-        terrainGroup.style.display = (currentView === 'chart' && showCoordinates) ? 'block' : 'none'
+      const terrainGridGroup = document.getElementById('terrain-grid')
+      if (terrainGridGroup) {
+        terrainGridGroup.style.display = (currentView === 'chart' && showCoordinates) ? 'block' : 'none'
       }
     })
   }
@@ -401,9 +396,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (visibilityToggle) {
     visibilityToggle.addEventListener('click', () => {
       showVisibility = !showVisibility
-      const visibilityGroup = document.getElementById('visibility-grid')
-      if (visibilityGroup) {
-        visibilityGroup.style.display = (currentView === 'chart' && showVisibility) ? 'block' : 'none'
+      const visibilityGridGroup = document.getElementById('visibility-grid')
+      if (visibilityGridGroup) {
+        visibilityGridGroup.style.display = (currentView === 'chart' && showVisibility) ? 'block' : 'none'
       }
     })
   }

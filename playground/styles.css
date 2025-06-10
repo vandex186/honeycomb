@@ -188,19 +188,13 @@ body[data-view="dungeon"] .bottom-area {
   opacity: 1;
 }
 
-/* Terrain overlay styles */
-.terrain-polygon {
-  fill: rgba(255, 255, 0, 0.2) !important;
-  stroke: rgba(255, 255, 0, 0.8) !important;
-  stroke-width: 2 !important;
-  stroke-dasharray: 5,5;
-}
-
+/* Terrain text styles - face to camera, no transformation */
 .terrain-text {
   fill: #ffff00 !important;
   font-weight: bold !important;
   font-size: 2rem !important;
-  transform-style: flat !important;
+  user-select: none !important;
+  pointer-events: none !important;
 }
 
 /* Visibility grid styles */
