@@ -227,6 +227,13 @@ function renderGrid(view: string) {
   mainGridGroup.setAttribute('id', 'main-grid')
   svg.appendChild(mainGridGroup)
 
+  // Fog of war overlay group (separate layer above main grid)
+  const fogOverlayGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  fogOverlayGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  fogOverlayGroup.setAttribute('id', 'fog-overlay')
+  fogOverlayGroup.style.pointerEvents = 'none' // Allow clicks to pass through
+  svg.appendChild(fogOverlayGroup)
+
   // Render main grid
   let index = 0
   for (const hex of mainGrid) {
@@ -257,26 +264,6 @@ function renderGrid(view: string) {
     polygon.style.strokeWidth = '1'
     
     group.appendChild(polygon)
-    
-    // Add visibility overlay if visibility is enabled and in chart view
-    if (view === 'chart' && showVisibility && shouldShowButtonEffects(customHex.radialDistance)) {
-      const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-      overlay.setAttribute('points', points)
-      overlay.style.stroke = 'none'
-      
-      if (customHex.visibility === 'undiscovered') {
-        // Ring 5 - Dark (undiscovered) #000 80%
-        overlay.style.fill = 'rgba(0, 0, 0, 0.8)'
-      } else if (customHex.visibility === 'discovered') {
-        // Rings 2-3-4 - transparency 100% (discovered) - completely transparent
-        overlay.style.fill = 'rgba(0, 0, 0, 0)'
-      } else if (customHex.visibility === 'visible') {
-        // Other rings - visible (light overlay)
-        overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
-      }
-      
-      group.appendChild(overlay)
-    }
     
     // Add number text (centered vertically) with 20% transparency
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
@@ -328,6 +315,46 @@ function renderGrid(view: string) {
     
     mainGridGroup.appendChild(group)
     index++
+  }
+
+  // Render fog of war overlay (separate from main grid)
+  if (view === 'chart' && showVisibility) {
+    let overlayIndex = 0
+    for (const hex of mainGrid) {
+      const customHex = hex as CustomHex | VerticalHex
+      
+      // Skip rendering hexes with radial distance 6 or 7 in chart view
+      if (shouldHideHex(customHex.radialDistance)) {
+        overlayIndex++
+        continue
+      }
+      
+      // Only render fog overlay for hexes that should show button effects
+      if (shouldShowButtonEffects(customHex.radialDistance)) {
+        const fogGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
+        
+        overlay.setAttribute('points', points)
+        overlay.style.stroke = 'none'
+        
+        if (customHex.visibility === 'undiscovered') {
+          // Ring 5 - Dark (undiscovered) #000 80%
+          overlay.style.fill = 'rgba(0, 0, 0, 0.8)'
+        } else if (customHex.visibility === 'discovered') {
+          // Rings 2-3-4 - transparency 100% (discovered) - completely transparent
+          overlay.style.fill = 'rgba(0, 0, 0, 0)'
+        } else if (customHex.visibility === 'visible') {
+          // Other rings - visible (light overlay)
+          overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
+        }
+        
+        fogGroup.appendChild(overlay)
+        fogOverlayGroup.appendChild(fogGroup)
+      }
+      
+      overlayIndex++
+    }
   }
 
   setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
@@ -434,9 +461,14 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     const newYOffset = (window.innerHeight - gridHeight) / 2
     
     const mainGridGroup = document.getElementById('main-grid')
+    const fogOverlayGroup = document.getElementById('fog-overlay')
     
     if (mainGridGroup) {
       mainGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    }
+    
+    if (fogOverlayGroup) {
+      fogOverlayGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     }
     
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
