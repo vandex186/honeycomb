@@ -201,17 +201,17 @@ body[data-view="dungeon"] .bottom-area {
 .visibility-undiscovered {
   fill: rgba(0, 0, 0, 0.8) !important;
   stroke: #000000 !important;
-  stroke-width: 5 !important;
+  stroke-width: 3 !important;
 }
 
 .visibility-discovered {
   fill: rgba(0, 255, 0, 0.1) !important;
   stroke: #ffffff !important;
-  stroke-width: 5 !important;
+  stroke-width: 3 !important;
 }
 
 .visibility-visible {
   fill: rgba(255, 255, 255, 0.2) !important;
   stroke: #ffffff !important;
-  stroke-width: 5 !important;
+  stroke-width: 3 !important;
 }
