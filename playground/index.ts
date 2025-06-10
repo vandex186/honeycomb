@@ -128,6 +128,14 @@ function initializeGrid(view: string) {
       customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
       index++
     }
+    
+    // Also set radial distances for numberGrid
+    index = 0
+    for (const hex of numberGrid) {
+      const customHex = hex as CustomHex | VerticalHex
+      customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
+      index++
+    }
   }
   
   // Initialize visibility states randomly for demo
@@ -259,17 +267,19 @@ function renderGrids(view: string) {
     // Use radial distance for chart view, regular index for others
     if (view === 'chart' && customHex.radialDistance !== undefined) {
       text.textContent = `${customHex.radialDistance}`
+      text.style.fill = 'yellow'  // Make radial distances more visible
+      text.style.fontWeight = 'bold'
     } else {
       text.textContent = `${numberIndex}`
+      text.style.fill = 'white'
     }
     
     text.setAttribute('x', hex.x.toString())
     text.setAttribute('y', hex.y.toString())
     text.setAttribute('text-anchor', 'middle')
     text.setAttribute('dominant-baseline', 'central')
-    text.style.fill = 'white'
     text.style.fontSize = '1.5rem'
-    text.style.opacity = '0.8'
+    text.style.opacity = '1'
     text.style.userSelect = 'none'
     text.style.pointerEvents = 'none'
     
