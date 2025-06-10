@@ -200,7 +200,7 @@ body[data-view="dungeon"] .bottom-area {
 /* Visibility grid styles */
 .visibility-undiscovered {
   fill: rgba(0, 0, 0, 0.8) !important;
-  stroke: #000000 !important;
+  stroke: #ffffff !important;
   stroke-width: 3 !important;
 }
 
