@@ -199,19 +199,19 @@ body[data-view="dungeon"] .bottom-area {
 
 /* Visibility grid styles */
 .visibility-undiscovered {
-  fill: #000000 !important;
+  fill: rgba(0, 0, 0, 0.8) !important;
   stroke: #000000 !important;
   stroke-width: 5 !important;
 }
 
 .visibility-discovered {
-  fill: #00ff00 !important;
+  fill: rgba(0, 255, 0, 0.1) !important;
   stroke: #ffffff !important;
   stroke-width: 5 !important;
 }
 
 .visibility-visible {
-  fill: #ffffff !important;
+  fill: rgba(255, 255, 255, 0.2) !important;
   stroke: #ffffff !important;
   stroke-width: 5 !important;
 }
