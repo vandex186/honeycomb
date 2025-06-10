@@ -109,6 +109,11 @@ function getTerrainEmoji(terrain: any) {
 }
 
 function getTerrainType(index: number) {
+  // Special case: hex 36 is always road
+  if (index === 36) {
+    return ROAD
+  }
+  
   const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
   return terrains[index % terrains.length]
 }
