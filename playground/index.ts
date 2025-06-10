@@ -74,7 +74,7 @@ function initializeGrid(view: string) {
   document.body.setAttribute('data-view', view)
   const container = document.getElementById('container')
   if (container) {
-    container.innerHTML = ''
+    container.innerHTML = '' // Clear previous content
   }
 
   let gridOptions: GridOptions
@@ -204,6 +204,11 @@ function shouldShowButtonEffects(radialDistance?: number): boolean {
 
 function renderGrid(view: string) {
   const container = document.getElementById('container')
+  if (!container) return
+
+  // Clear container completely
+  container.innerHTML = ''
+
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
   const gridWidth = mainGrid.pixelWidth
@@ -216,7 +221,7 @@ function renderGrid(view: string) {
   svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   svg.classList.add('hex-grid')
   svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
-  container?.appendChild(svg)
+  container.appendChild(svg)
 
   // Main grid group (with 3D transformation)
   const mainGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
@@ -253,30 +258,24 @@ function renderGrid(view: string) {
     polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
     polygon.style.strokeWidth = '1'
     
+    group.appendChild(polygon)
+    
     // Add visibility overlay if visibility is enabled and in chart view
     if (view === 'chart' && showVisibility && shouldShowButtonEffects(customHex.radialDistance)) {
+      const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+      overlay.setAttribute('points', points)
+      overlay.style.stroke = 'none'
+      
       if (customHex.visibility === 'undiscovered') {
-        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-        overlay.setAttribute('points', points)
         overlay.style.fill = 'rgba(0, 0, 0, 0.8)'
-        overlay.style.stroke = 'none'
-        group.appendChild(overlay)
       } else if (customHex.visibility === 'discovered') {
-        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-        overlay.setAttribute('points', points)
         overlay.style.fill = 'rgba(0, 255, 0, 0.1)'
-        overlay.style.stroke = 'none'
-        group.appendChild(overlay)
       } else if (customHex.visibility === 'visible') {
-        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-        overlay.setAttribute('points', points)
         overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
-        overlay.style.stroke = 'none'
-        group.appendChild(overlay)
       }
+      
+      group.appendChild(overlay)
     }
-    
-    group.appendChild(polygon)
     
     // Add number text
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
