@@ -139,13 +139,21 @@ function initializeGrid(view: string) {
     }
   }
   
-  // Initialize visibility states randomly for demo
+  // Initialize visibility states randomly for demo - ONLY for hexes within ring 4
   let index = 0
   for (const hex of visibilityGrid) {
-    const rand = Math.random()
-    if (rand < 0.3) hex.visibility = 'undiscovered'
-    else if (rand < 0.7) hex.visibility = 'discovered'
-    else hex.visibility = 'visible'
+    const customHex = hex as CustomHex | VerticalHex
+    
+    // Only set visibility for hexes within ring 4 (radial distance ≤ 4)
+    if (view === 'chart' && customHex.radialDistance !== undefined && customHex.radialDistance <= 4) {
+      const rand = Math.random()
+      if (rand < 0.3) hex.visibility = 'undiscovered'
+      else if (rand < 0.7) hex.visibility = 'discovered'
+      else hex.visibility = 'visible'
+    } else {
+      // For hexes outside ring 4 or non-chart views, set default visibility
+      hex.visibility = 'visible'
+    }
     index++
   }
   
@@ -207,6 +215,11 @@ function getTerrainColor(terrain: any): string {
 function shouldHideHex(radialDistance?: number): boolean {
   // Hide hexes with radial distance 6 or 7
   return radialDistance !== undefined && radialDistance >= 6
+}
+
+// NEW: Check if hex should show button effects (only within ring 4)
+function shouldShowButtonEffects(radialDistance?: number): boolean {
+  return radialDistance !== undefined && radialDistance <= 4
 }
 
 function renderGrids(view: string) {
@@ -321,7 +334,7 @@ function renderGrids(view: string) {
     numberIndex++
   }
 
-  // Render terrain grid (face-to-camera, no transformation)
+  // Render terrain grid (face-to-camera, no transformation) - ONLY for hexes within ring 4
   if (view === 'chart') {
     let terrainIndex = 0
     for (const hex of terrainGrid) {
@@ -333,22 +346,25 @@ function renderGrids(view: string) {
         continue
       }
       
-      // Create face-to-camera text with terrain emoji
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      const terrainType = getTerrainType(terrainIndex, customHex.radialDistance)
-      text.textContent = getTerrainEmoji(terrainType)
-      text.setAttribute('x', hex.x.toString())
-      text.setAttribute('y', hex.y.toString())
-      text.setAttribute('text-anchor', 'middle')
-      text.setAttribute('dominant-baseline', 'central')
-      text.classList.add('terrain-text')
-      
-      terrainGridGroup.appendChild(text)
+      // ONLY show terrain emojis for hexes within ring 4 when button is active
+      if (shouldShowButtonEffects(customHex.radialDistance)) {
+        // Create face-to-camera text with terrain emoji
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        const terrainType = getTerrainType(terrainIndex, customHex.radialDistance)
+        text.textContent = getTerrainEmoji(terrainType)
+        text.setAttribute('x', hex.x.toString())
+        text.setAttribute('y', hex.y.toString())
+        text.setAttribute('text-anchor', 'middle')
+        text.setAttribute('dominant-baseline', 'central')
+        text.classList.add('terrain-text')
+        
+        terrainGridGroup.appendChild(text)
+      }
       terrainIndex++
     }
   }
 
-  // Render visibility grid
+  // Render visibility grid - ONLY for hexes within ring 4
   if (view === 'chart') {
     for (const hex of visibilityGrid) {
       const visHex = hex as CustomHex | VerticalHex
@@ -358,20 +374,23 @@ function renderGrids(view: string) {
         continue
       }
       
-      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-      const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
-      
-      polygon.setAttribute('points', points)
-      
-      if (visHex.visibility === 'undiscovered') {
-        polygon.classList.add('visibility-undiscovered')
-      } else if (visHex.visibility === 'discovered') {
-        polygon.classList.add('visibility-discovered')
-      } else {
-        polygon.classList.add('visibility-visible')
+      // ONLY show visibility effects for hexes within ring 4
+      if (shouldShowButtonEffects(visHex.radialDistance)) {
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
+        
+        polygon.setAttribute('points', points)
+        
+        if (visHex.visibility === 'undiscovered') {
+          polygon.classList.add('visibility-undiscovered')
+        } else if (visHex.visibility === 'discovered') {
+          polygon.classList.add('visibility-discovered')
+        } else {
+          polygon.classList.add('visibility-visible')
+        }
+        
+        visibilityGridGroup.appendChild(polygon)
       }
-      
-      visibilityGridGroup.appendChild(polygon)
     }
   }
 
