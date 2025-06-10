@@ -12,6 +12,7 @@ class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   custom = 'test'
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
+  radialDistance?: number
 }
 
 class VerticalHex extends defineHex({ 
@@ -22,6 +23,7 @@ class VerticalHex extends defineHex({
   custom = 'test'
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
+  radialDistance?: number
 }
 
 // Grid state
@@ -43,6 +45,32 @@ const CASTLE = {
 function createGrid(options: GridOptions) {
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
+}
+
+// Calculate radial distance from castle hex (index 36)
+function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: number): number {
+  // Convert linear index to grid coordinates
+  const fromRow = Math.floor(fromIndex / gridWidth)
+  const fromCol = fromIndex % gridWidth
+  const toRow = Math.floor(toIndex / gridWidth)
+  const toCol = toIndex % gridWidth
+  
+  // Convert to axial coordinates (for pointy-top hexes)
+  const fromQ = fromCol - Math.floor(fromRow / 2)
+  const fromR = fromRow
+  const toQ = toCol - Math.floor(toRow / 2)
+  const toR = toRow
+  
+  // Calculate cube coordinates
+  const fromS = -fromQ - fromR
+  const toS = -toQ - toR
+  
+  // Calculate distance using cube coordinates
+  return Math.max(
+    Math.abs(fromQ - toQ),
+    Math.abs(fromR - toR),
+    Math.abs(fromS - toS)
+  )
 }
 
 function initializeGrid(view: string) {
@@ -90,6 +118,17 @@ function initializeGrid(view: string) {
   numberGrid = createGrid(gridOptions)
   terrainGrid = createGrid(gridOptions)
   visibilityGrid = createGrid(gridOptions)
+  
+  // Calculate radial distances for chart view
+  if (view === 'chart') {
+    const castleIndex = 36
+    let index = 0
+    for (const hex of mainGrid) {
+      const customHex = hex as CustomHex | VerticalHex
+      customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
+      index++
+    }
+  }
   
   // Initialize visibility states randomly for demo
   let index = 0
@@ -214,8 +253,16 @@ function renderGrids(view: string) {
   // Render number grid (numbers only) - ALWAYS VISIBLE
   let numberIndex = 0
   for (const hex of numberGrid) {
+    const customHex = hex as CustomHex | VerticalHex
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    text.textContent = `${numberIndex}`
+    
+    // Use radial distance for chart view, regular index for others
+    if (view === 'chart' && customHex.radialDistance !== undefined) {
+      text.textContent = `${customHex.radialDistance}`
+    } else {
+      text.textContent = `${numberIndex}`
+    }
+    
     text.setAttribute('x', hex.x.toString())
     text.setAttribute('y', hex.y.toString())
     text.setAttribute('text-anchor', 'middle')
