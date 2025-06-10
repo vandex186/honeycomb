@@ -55,36 +55,36 @@ body {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Toggle button styles - positioned in top area */
-.overlay-toggle-button {
-  padding: 1rem 2rem;
-  background: rgba(255, 255, 0, 0.8);
-  color: #000;
-  border: 1px solid rgba(255, 255, 0, 1);
-  border-radius: 4px;
-  font-size: 1.2rem;
-  font-weight: bold;
+/* Icon button styles */
+.icon-button {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  font-size: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  border-radius: 4px;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  min-width: 150px;
-  min-height: 44px;
-  margin-left: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.overlay-toggle-button:hover {
-  background: rgba(255, 255, 0, 1);
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
 }
 
-.overlay-toggle-button:active {
+.icon-button:active {
   transform: scale(0.95);
 }
 
-/* Hide toggle button for non-chart views */
-body:not([data-view="chart"]) .overlay-toggle-button {
+/* Hide icon buttons for non-chart views */
+body:not([data-view="chart"]) .icon-button {
   display: none;
 }
 
@@ -185,7 +185,7 @@ body[data-view="dungeon"] .bottom-area {
 }
 
 .hex-grid .cell-number {
-  opacity: 0;
+  opacity: 1;
 }
 
 /* Terrain overlay styles */
@@ -199,5 +199,18 @@ body[data-view="dungeon"] .bottom-area {
 .terrain-text {
   fill: #ffff00 !important;
   font-weight: bold !important;
-  font-size: 1.2rem !important;
+  font-size: 2rem !important;
+  transform-style: flat !important;
+}
+
+/* Visibility grid styles */
+.visibility-discovered {
+  fill: none !important;
+  stroke: rgba(255, 255, 255, 0.8) !important;
+  stroke-width: 5 !important;
+}
+
+.visibility-visible {
+  fill: none !important;
+  stroke: none !important;
 }

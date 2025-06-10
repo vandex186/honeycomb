@@ -11,6 +11,7 @@ interface GridOptions {
 class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   custom = 'test'
   transformedCoordinates?: { x: number; y: number }
+  visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
 }
 
 class VerticalHex extends defineHex({ 
@@ -20,13 +21,16 @@ class VerticalHex extends defineHex({
 }) {
   custom = 'test'
   transformedCoordinates?: { x: number; y: number }
+  visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
 }
 
 // Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
 let terrainGrid: Grid<CustomHex | VerticalHex>
+let visibilityGrid: Grid<CustomHex | VerticalHex>
 let currentView = 'castle'
-let showOverlay = false
+let showCoordinates = false
+let showVisibility = false
 
 function createGrid(options: GridOptions) {
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
@@ -76,7 +80,19 @@ function initializeGrid(view: string) {
 
   mainGrid = createGrid(gridOptions)
   terrainGrid = createGrid(gridOptions)
-  renderGrid(mainGrid, terrainGrid, view)
+  visibilityGrid = createGrid(gridOptions)
+  
+  // Initialize visibility states randomly for demo
+  let index = 0
+  for (const hex of visibilityGrid) {
+    const rand = Math.random()
+    if (rand < 0.3) hex.visibility = 'undiscovered'
+    else if (rand < 0.7) hex.visibility = 'discovered'
+    else hex.visibility = 'visible'
+    index++
+  }
+  
+  renderGrid(mainGrid, terrainGrid, visibilityGrid, view)
 }
 
 function getTerrainEmoji(terrain: any) {
@@ -95,7 +111,23 @@ function getTerrainType(index: number) {
   return terrains[index % terrains.length]
 }
 
-function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex | VerticalHex>, view: string) {
+function getTerrainColor(terrain: any): string {
+  switch(terrain.type) {
+    case 'Building': return '#616161'
+    case 'Road': return '#181818'
+    case 'Trees': return '#11580f'
+    case 'Field': return '#11580f'
+    case 'Water': return '#0d73c9'
+    default: return '#ffffff'
+  }
+}
+
+function renderGrid(
+  grid: Grid<CustomHex | VerticalHex>, 
+  terrain: Grid<CustomHex | VerticalHex>,
+  visibility: Grid<CustomHex | VerticalHex>,
+  view: string
+) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
@@ -111,17 +143,28 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex
   svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
   container?.appendChild(svg)
 
+  // Main grid group
   const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
   gridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
   gridGroup.setAttribute('id', 'main-grid')
   svg.appendChild(gridGroup)
 
-  // Create terrain overlay group (initially hidden for non-chart views)
+  // Terrain grid group (no transformation)
   const terrainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
   terrainGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
   terrainGroup.setAttribute('id', 'terrain-grid')
-  terrainGroup.style.display = (view === 'chart' && showOverlay) ? 'block' : 'none'
+  terrainGroup.style.display = (view === 'chart' && showCoordinates) ? 'block' : 'none'
+  // Remove transformation for terrain grid
+  terrainGroup.style.transform = 'none'
+  terrainGroup.style.transformStyle = 'flat'
   svg.appendChild(terrainGroup)
+
+  // Visibility grid group
+  const visibilityGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  visibilityGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  visibilityGroup.setAttribute('id', 'visibility-grid')
+  visibilityGroup.style.display = (view === 'chart' && showVisibility) ? 'block' : 'none'
+  svg.appendChild(visibilityGroup)
 
   // Render main grid
   let index = 0
@@ -132,6 +175,13 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex
     
     polygon.setAttribute('points', points)
     
+    // Add terrain background color for chart view
+    if (view === 'chart') {
+      const terrainType = getTerrainType(index)
+      const terrainColor = getTerrainColor(terrainType)
+      polygon.style.fill = terrainColor
+    }
+    
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     if (view === 'chart') {
       const terrainType = getTerrainType(index)
@@ -140,6 +190,7 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex
       cellNumber.setAttribute('x', hex.x.toString())
       cellNumber.setAttribute('dy', '-1.2em')
       cellNumber.classList.add('cell-number')
+      cellNumber.style.opacity = '0.5' // 50% transparency
       
       const terrainEmoji = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
       terrainEmoji.textContent = getTerrainEmoji(terrainType)
@@ -163,8 +214,9 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex
     index++
   }
 
-  // Render terrain grid (coordinates only, no transformation)
+  // Render terrain grid (face-to-camera, no transformation)
   if (view === 'chart') {
+    let terrainIndex = 0
     for (const hex of terrain) {
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
       const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
@@ -173,17 +225,46 @@ function renderGrid(grid: Grid<CustomHex | VerticalHex>, terrain: Grid<CustomHex
       polygon.setAttribute('points', points)
       polygon.classList.add('terrain-polygon')
       
+      // Create face-to-camera text with terrain emoji
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      text.textContent = `${hex.q},${hex.r}`
+      const terrainType = getTerrainType(terrainIndex)
+      text.textContent = getTerrainEmoji(terrainType)
       text.setAttribute('x', hex.x.toString())
       text.setAttribute('y', hex.y.toString())
       text.setAttribute('text-anchor', 'middle')
       text.setAttribute('dominant-baseline', 'central')
       text.classList.add('terrain-text')
+      // Ensure no transformation is applied to this text
+      text.style.transform = 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+      text.style.transformStyle = 'flat'
       
       group.appendChild(polygon)
       group.appendChild(text)
       terrainGroup.appendChild(group)
+      terrainIndex++
+    }
+  }
+
+  // Render visibility grid
+  if (view === 'chart') {
+    for (const hex of visibility) {
+      const visHex = hex as CustomHex | VerticalHex
+      if (visHex.visibility === 'undiscovered') continue // Skip undiscovered hexes
+      
+      const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+      const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+      const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
+      
+      polygon.setAttribute('points', points)
+      
+      if (visHex.visibility === 'discovered') {
+        polygon.classList.add('visibility-discovered')
+      } else {
+        polygon.classList.add('visibility-visible')
+      }
+      
+      group.appendChild(polygon)
+      visibilityGroup.appendChild(group)
     }
   }
 
@@ -291,25 +372,39 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     const newYOffset = (window.innerHeight - gridHeight) / 2
     gridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     const terrainGroup = document.getElementById('terrain-grid')
+    const visibilityGroup = document.getElementById('visibility-grid')
     if (terrainGroup) {
       terrainGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    }
+    if (visibilityGroup) {
+      visibilityGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     }
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   })
 }
 
-// Setup overlay toggle button functionality
+// Setup button functionality
 document.addEventListener('DOMContentLoaded', () => {
-  const overlayToggle = document.getElementById('overlay-toggle') as HTMLButtonElement
+  const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+  const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
   
-  if (overlayToggle) {
-    overlayToggle.addEventListener('click', () => {
-      showOverlay = !showOverlay
+  if (coordinatesToggle) {
+    coordinatesToggle.addEventListener('click', () => {
+      showCoordinates = !showCoordinates
       const terrainGroup = document.getElementById('terrain-grid')
       if (terrainGroup) {
-        terrainGroup.style.display = showOverlay ? 'block' : 'none'
+        terrainGroup.style.display = (currentView === 'chart' && showCoordinates) ? 'block' : 'none'
       }
-      overlayToggle.textContent = showOverlay ? 'Hide Coordinates' : 'Show Coordinates'
+    })
+  }
+
+  if (visibilityToggle) {
+    visibilityToggle.addEventListener('click', () => {
+      showVisibility = !showVisibility
+      const visibilityGroup = document.getElementById('visibility-grid')
+      if (visibilityGroup) {
+        visibilityGroup.style.display = (currentView === 'chart' && showVisibility) ? 'block' : 'none'
+      }
     })
   }
 })
@@ -323,12 +418,9 @@ document.querySelectorAll('.nav-button').forEach(button => {
       document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
       target.classList.add('active')
       currentView = view
-      // Reset overlay state when switching views
-      showOverlay = false
-      const overlayToggle = document.getElementById('overlay-toggle') as HTMLButtonElement
-      if (overlayToggle) {
-        overlayToggle.textContent = 'Show Coordinates'
-      }
+      // Reset states when switching views
+      showCoordinates = false
+      showVisibility = false
       initializeGrid(view)
     }
   }
