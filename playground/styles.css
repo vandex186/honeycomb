@@ -197,21 +197,21 @@ body[data-view="dungeon"] .bottom-area {
   pointer-events: none !important;
 }
 
-/* Visibility grid styles */
+/* Visibility grid styles - NO BORDERS between same visibility states */
 .visibility-undiscovered {
   fill: rgba(0, 0, 0, 0.8) !important;
-  stroke: #ffffff !important;
-  stroke-width: 3 !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
 }
 
 .visibility-discovered {
   fill: rgba(0, 255, 0, 0.1) !important;
-  stroke: #ffffff !important;
-  stroke-width: 3 !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
 }
 
 .visibility-visible {
   fill: rgba(255, 255, 255, 0.2) !important;
-  stroke: #ffffff !important;
-  stroke-width: 3 !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
 }
