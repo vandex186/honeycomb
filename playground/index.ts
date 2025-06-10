@@ -28,9 +28,6 @@ class VerticalHex extends defineHex({
 
 // Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
-let numberGrid: Grid<CustomHex | VerticalHex>
-let terrainGrid: Grid<CustomHex | VerticalHex>
-let visibilityGrid: Grid<CustomHex | VerticalHex>
 let currentView = 'castle'
 let showCoordinates = false
 let showVisibility = false
@@ -47,7 +44,7 @@ function createGrid(options: GridOptions) {
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
 }
 
-// Calculate radial distance from castle hex (index 36)
+// Calculate radial distance from castle hex (center)
 function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: number): number {
   // Convert linear index to grid coordinates
   const fromRow = Math.floor(fromIndex / gridWidth)
@@ -115,11 +112,8 @@ function initializeGrid(view: string) {
   }
 
   mainGrid = createGrid(gridOptions)
-  numberGrid = createGrid(gridOptions)
-  terrainGrid = createGrid(gridOptions)
-  visibilityGrid = createGrid(gridOptions)
   
-  // Calculate radial distances for chart view
+  // Calculate radial distances and initialize visibility for chart view
   if (view === 'chart') {
     // Castle is now at the center of the 11x11 grid
     const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
@@ -127,37 +121,23 @@ function initializeGrid(view: string) {
     for (const hex of mainGrid) {
       const customHex = hex as CustomHex | VerticalHex
       customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
-      index++
-    }
-    
-    // Also set radial distances for numberGrid
-    index = 0
-    for (const hex of numberGrid) {
-      const customHex = hex as CustomHex | VerticalHex
-      customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
+      
+      // Initialize visibility states randomly for demo - ONLY for hexes within ring 4
+      if (customHex.radialDistance <= 4) {
+        const rand = Math.random()
+        if (rand < 0.3) customHex.visibility = 'undiscovered'
+        else if (rand < 0.7) customHex.visibility = 'discovered'
+        else customHex.visibility = 'visible'
+      } else {
+        // For hexes outside ring 4, set default visibility
+        customHex.visibility = 'visible'
+      }
+      
       index++
     }
   }
   
-  // Initialize visibility states randomly for demo - ONLY for hexes within ring 4
-  let index = 0
-  for (const hex of visibilityGrid) {
-    const customHex = hex as CustomHex | VerticalHex
-    
-    // Only set visibility for hexes within ring 4 (radial distance ≤ 4)
-    if (view === 'chart' && customHex.radialDistance !== undefined && customHex.radialDistance <= 4) {
-      const rand = Math.random()
-      if (rand < 0.3) hex.visibility = 'undiscovered'
-      else if (rand < 0.7) hex.visibility = 'discovered'
-      else hex.visibility = 'visible'
-    } else {
-      // For hexes outside ring 4 or non-chart views, set default visibility
-      hex.visibility = 'visible'
-    }
-    index++
-  }
-  
-  renderGrids(view)
+  renderGrid(view)
 }
 
 function getTerrainEmoji(terrain: any) {
@@ -217,12 +197,12 @@ function shouldHideHex(radialDistance?: number): boolean {
   return radialDistance !== undefined && radialDistance >= 6
 }
 
-// NEW: Check if hex should show button effects (only within ring 4)
+// Check if hex should show button effects (only within ring 4)
 function shouldShowButtonEffects(radialDistance?: number): boolean {
   return radialDistance !== undefined && radialDistance <= 4
 }
 
-function renderGrids(view: string) {
+function renderGrid(view: string) {
   const container = document.getElementById('container')
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 
@@ -244,27 +224,7 @@ function renderGrids(view: string) {
   mainGridGroup.setAttribute('id', 'main-grid')
   svg.appendChild(mainGridGroup)
 
-  // Number grid group (with 3D transformation)
-  const numberGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  numberGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  numberGridGroup.setAttribute('id', 'number-grid')
-  svg.appendChild(numberGridGroup)
-
-  // Terrain grid group (NO transformation - face to camera)
-  const terrainGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  terrainGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  terrainGridGroup.setAttribute('id', 'terrain-grid')
-  terrainGridGroup.style.display = (view === 'chart' && showCoordinates) ? 'block' : 'none'
-  svg.appendChild(terrainGridGroup)
-
-  // Visibility grid group (with 3D transformation)
-  const visibilityGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  visibilityGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
-  visibilityGridGroup.setAttribute('id', 'visibility-grid')
-  visibilityGridGroup.style.display = (view === 'chart' && showVisibility) ? 'block' : 'none'
-  svg.appendChild(visibilityGridGroup)
-
-  // Render main grid (terrain background colors only)
+  // Render main grid
   let index = 0
   for (const hex of mainGrid) {
     const customHex = hex as CustomHex | VerticalHex
@@ -293,105 +253,74 @@ function renderGrids(view: string) {
     polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
     polygon.style.strokeWidth = '1'
     
-    group.appendChild(polygon)
-    mainGridGroup.appendChild(group)
-    index++
-  }
-
-  // Render number grid (numbers only) - ALWAYS VISIBLE
-  let numberIndex = 0
-  for (const hex of numberGrid) {
-    const customHex = hex as CustomHex | VerticalHex
-    
-    // Skip rendering numbers for hexes with radial distance 6 or 7 in chart view
-    if (view === 'chart' && shouldHideHex(customHex.radialDistance)) {
-      numberIndex++
-      continue
+    // Add visibility overlay if visibility is enabled and in chart view
+    if (view === 'chart' && showVisibility && shouldShowButtonEffects(customHex.radialDistance)) {
+      if (customHex.visibility === 'undiscovered') {
+        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        overlay.setAttribute('points', points)
+        overlay.style.fill = 'rgba(0, 0, 0, 0.8)'
+        overlay.style.stroke = 'none'
+        group.appendChild(overlay)
+      } else if (customHex.visibility === 'discovered') {
+        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        overlay.setAttribute('points', points)
+        overlay.style.fill = 'rgba(0, 255, 0, 0.1)'
+        overlay.style.stroke = 'none'
+        group.appendChild(overlay)
+      } else if (customHex.visibility === 'visible') {
+        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        overlay.setAttribute('points', points)
+        overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
+        overlay.style.stroke = 'none'
+        group.appendChild(overlay)
+      }
     }
     
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    group.appendChild(polygon)
+    
+    // Add number text
+    const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
     // Use radial distance for chart view, regular index for others
     if (view === 'chart' && customHex.radialDistance !== undefined) {
-      text.textContent = `${customHex.radialDistance}`
-      text.style.fill = 'yellow'  // Make radial distances more visible
-      text.style.fontWeight = 'bold'
+      numberText.textContent = `${customHex.radialDistance}`
+      numberText.style.fill = 'yellow'  // Make radial distances more visible
+      numberText.style.fontWeight = 'bold'
     } else {
-      text.textContent = `${numberIndex}`
-      text.style.fill = 'white'
+      numberText.textContent = `${index}`
+      numberText.style.fill = 'white'
     }
     
-    text.setAttribute('x', hex.x.toString())
-    text.setAttribute('y', hex.y.toString())
-    text.setAttribute('text-anchor', 'middle')
-    text.setAttribute('dominant-baseline', 'central')
-    text.style.fontSize = '1rem'
-    text.style.opacity = '1'
-    text.style.userSelect = 'none'
-    text.style.pointerEvents = 'none'
+    numberText.setAttribute('x', hex.x.toString())
+    numberText.setAttribute('y', (hex.y - 8).toString()) // Offset up slightly
+    numberText.setAttribute('text-anchor', 'middle')
+    numberText.setAttribute('dominant-baseline', 'central')
+    numberText.style.fontSize = '1rem'
+    numberText.style.userSelect = 'none'
+    numberText.style.pointerEvents = 'none'
     
-    numberGridGroup.appendChild(text)
-    numberIndex++
-  }
-
-  // Render terrain grid (face-to-camera, no transformation) - ONLY for hexes within ring 4
-  if (view === 'chart') {
-    let terrainIndex = 0
-    for (const hex of terrainGrid) {
-      const customHex = hex as CustomHex | VerticalHex
+    group.appendChild(numberText)
+    
+    // Add terrain emoji if coordinates are enabled and in chart view
+    if (view === 'chart' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
+      const terrainText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      const terrainType = getTerrainType(index, customHex.radialDistance)
+      terrainText.textContent = getTerrainEmoji(terrainType)
+      terrainText.setAttribute('x', hex.x.toString())
+      terrainText.setAttribute('y', (hex.y + 8).toString()) // Offset down slightly
+      terrainText.setAttribute('text-anchor', 'middle')
+      terrainText.setAttribute('dominant-baseline', 'central')
+      terrainText.style.fontSize = '1.5rem'
+      terrainText.style.userSelect = 'none'
+      terrainText.style.pointerEvents = 'none'
+      terrainText.style.fill = '#ffff00'
+      terrainText.style.fontWeight = 'bold'
       
-      // Skip rendering terrain for hexes with radial distance 6 or 7
-      if (shouldHideHex(customHex.radialDistance)) {
-        terrainIndex++
-        continue
-      }
-      
-      // ONLY show terrain emojis for hexes within ring 4 when button is active
-      if (shouldShowButtonEffects(customHex.radialDistance)) {
-        // Create face-to-camera text with terrain emoji
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-        const terrainType = getTerrainType(terrainIndex, customHex.radialDistance)
-        text.textContent = getTerrainEmoji(terrainType)
-        text.setAttribute('x', hex.x.toString())
-        text.setAttribute('y', hex.y.toString())
-        text.setAttribute('text-anchor', 'middle')
-        text.setAttribute('dominant-baseline', 'central')
-        text.classList.add('terrain-text')
-        
-        terrainGridGroup.appendChild(text)
-      }
-      terrainIndex++
+      group.appendChild(terrainText)
     }
-  }
-
-  // Render visibility grid - ONLY for hexes within ring 4
-  if (view === 'chart') {
-    for (const hex of visibilityGrid) {
-      const visHex = hex as CustomHex | VerticalHex
-      
-      // Skip rendering visibility for hexes with radial distance 6 or 7
-      if (shouldHideHex(visHex.radialDistance)) {
-        continue
-      }
-      
-      // ONLY show visibility effects for hexes within ring 4
-      if (shouldShowButtonEffects(visHex.radialDistance)) {
-        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-        const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
-        
-        polygon.setAttribute('points', points)
-        
-        if (visHex.visibility === 'undiscovered') {
-          polygon.classList.add('visibility-undiscovered')
-        } else if (visHex.visibility === 'discovered') {
-          polygon.classList.add('visibility-discovered')
-        } else {
-          polygon.classList.add('visibility-visible')
-        }
-        
-        visibilityGridGroup.appendChild(polygon)
-      }
-    }
+    
+    mainGridGroup.appendChild(group)
+    index++
   }
 
   setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
@@ -498,21 +427,9 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     const newYOffset = (window.innerHeight - gridHeight) / 2
     
     const mainGridGroup = document.getElementById('main-grid')
-    const numberGridGroup = document.getElementById('number-grid')
-    const terrainGridGroup = document.getElementById('terrain-grid')
-    const visibilityGridGroup = document.getElementById('visibility-grid')
     
     if (mainGridGroup) {
       mainGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
-    }
-    if (numberGridGroup) {
-      numberGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
-    }
-    if (terrainGridGroup) {
-      terrainGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
-    }
-    if (visibilityGridGroup) {
-      visibilityGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
     }
     
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
@@ -528,9 +445,9 @@ document.addEventListener('DOMContentLoaded', () => {
     coordinatesToggle.addEventListener('click', () => {
       showCoordinates = !showCoordinates
       coordinatesToggle.style.background = showCoordinates ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
-      const terrainGridGroup = document.getElementById('terrain-grid')
-      if (terrainGridGroup) {
-        terrainGridGroup.style.display = (currentView === 'chart' && showCoordinates) ? 'block' : 'none'
+      // Re-render the grid to show/hide terrain emojis
+      if (currentView === 'chart') {
+        renderGrid(currentView)
       }
     })
   }
@@ -539,9 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
     visibilityToggle.addEventListener('click', () => {
       showVisibility = !showVisibility
       visibilityToggle.style.background = showVisibility ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
-      const visibilityGridGroup = document.getElementById('visibility-grid')
-      if (visibilityGridGroup) {
-        visibilityGridGroup.style.display = (currentView === 'chart' && showVisibility) ? 'block' : 'none'
+      // Re-render the grid to show/hide visibility overlays
+      if (currentView === 'chart') {
+        renderGrid(currentView)
       }
     })
   }
