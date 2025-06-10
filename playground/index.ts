@@ -33,6 +33,13 @@ let currentView = 'castle'
 let showCoordinates = false
 let showVisibility = false
 
+// New Castle terrain type
+const CASTLE = {
+  type: 'Castle',
+  passable: false,
+  opaque: true,
+}
+
 function createGrid(options: GridOptions) {
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
@@ -104,14 +111,20 @@ function getTerrainEmoji(terrain: any) {
     case 'Road': return '🪨'
     case 'Trees': return '🌳'
     case 'Building': return '🏠'
+    case 'Castle': return '🏰'
     default: return ''
   }
 }
 
 function getTerrainType(index: number) {
-  // Special case: hex 36 is always road
+  // Special cases for specific hexes
   if (index === 36) {
-    return ROAD
+    return CASTLE
+  }
+  
+  // Specific field hexes: 27, 28, 37, 44, 43, 35
+  if ([27, 28, 37, 44, 43, 35].includes(index)) {
+    return FIELD
   }
   
   const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
@@ -123,8 +136,9 @@ function getTerrainColor(terrain: any): string {
     case 'Building': return '#616161'
     case 'Road': return '#181818'
     case 'Trees': return '#11580f'
-    case 'Field': return '#dcc60a'
+    case 'Field': return '#009221'  // New green color for fields
     case 'Water': return '#0d73c9'
+    case 'Castle': return '#ff0000'  // Red color for castle
     default: return '#ffffff'
   }
 }
