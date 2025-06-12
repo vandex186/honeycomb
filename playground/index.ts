@@ -252,6 +252,8 @@ function renderGrid(view: string) {
   fogOverlayGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
   fogOverlayGroup.setAttribute('id', 'fog-overlay')
   fogOverlayGroup.style.pointerEvents = 'none' // Allow clicks to pass through
+  // Add backdrop blur class to fog overlay
+  fogOverlayGroup.classList.add('backdropblur')
   svg.appendChild(fogOverlayGroup)
 
   // Render main grid
@@ -282,6 +284,11 @@ function renderGrid(view: string) {
     
     polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
     polygon.style.strokeWidth = '1'
+    
+    // Apply blur effect to undiscovered hexes
+    if (view === 'castle' && customHex.visibility === 'undiscovered') {
+      group.classList.add('hex-undiscovered')
+    }
     
     group.appendChild(polygon)
     
@@ -356,17 +363,20 @@ function renderGrid(view: string) {
         const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
         
         overlay.setAttribute('points', points)
-        overlay.style.stroke = 'none'
         
         if (customHex.visibility === 'undiscovered') {
-          // Ring 5 - Dark (undiscovered) #000 80%
-          overlay.style.fill = 'rgba(0, 0, 0, 0.8)'
+          // Ring 5 - Dark (undiscovered) with stroke styling
+          overlay.style.fill = '#000000eb'
+          overlay.style.stroke = '#00000094'
+          overlay.style.strokeWidth = '29px'
         } else if (customHex.visibility === 'discovered') {
           // Rings 2-3-4 - transparency 100% (discovered) - completely transparent
           overlay.style.fill = 'rgba(0, 0, 0, 0)'
+          overlay.style.stroke = 'none'
         } else if (customHex.visibility === 'visible') {
           // Other rings - visible (light overlay)
           overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
+          overlay.style.stroke = 'none'
         }
         
         fogGroup.appendChild(overlay)

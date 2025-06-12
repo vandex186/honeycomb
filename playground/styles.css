@@ -525,11 +525,40 @@ body:not([data-view="castle"]) .icon-button {
   pointer-events: none !important;
 }
 
+/* Backdrop blur effect for fog overlay */
+.backdropblur {
+  background-image: url(http://www.publicdomainpictures.net/pictures/10000/velka/pebbles-and-sea-11284647414Rbeh.jpg);
+  background-attachment: fixed;
+  -webkit-filter: blur(4px);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* Fog overlay styling */
+#fog-overlay {
+  stroke: #00000094;
+  stroke-width: 29px;
+  fill: #000000eb;
+}
+
+#fog-overlay.backdropblur {
+  background-image: url(http://www.publicdomainpictures.net/pictures/10000/velka/pebbles-and-sea-11284647414Rbeh.jpg);
+  background-attachment: fixed;
+  -webkit-filter: blur(4px);
+  filter: blur(4px);
+}
+
+/* Undiscovered hex blur effect */
+.hex-undiscovered {
+  -webkit-filter: blur(4px);
+  filter: blur(4px);
+}
+
 /* Visibility grid styles */
 .visibility-undiscovered {
   fill: rgba(0, 0, 0, 0.8) !important;
-  stroke: none !important;
-  stroke-width: 0 !important;
+  stroke: #00000094 !important;
+  stroke-width: 29px !important;
 }
 
 .visibility-discovered {
