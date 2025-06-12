@@ -9,7 +9,249 @@
   <body>
     <div class="top-area">
       <button class="nav-button active" data-view="dungeon">Dungeon</button>
+      <button class="burger-menu" id="burger-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
+    
+    <!-- Popup Menu Overlay -->
+    <div class="menu-overlay" id="menu-overlay">
+      <div class="menu-popup">
+        <div class="menu-header">
+          <h2>Menu</h2>
+          <button class="close-button" id="close-menu">×</button>
+        </div>
+        <div class="menu-content">
+          <div class="menu-section">
+            <div class="menu-item" data-view="dungeon">
+              <span class="menu-icon">🏯</span>
+              <span class="menu-text">Dungeon</span>
+            </div>
+            <div class="menu-item" data-view="castle">
+              <span class="menu-icon">🏰</span>
+              <span class="menu-text">Castle</span>
+            </div>
+            <div class="menu-item" data-view="hero">
+              <span class="menu-icon">🦊</span>
+              <span class="menu-text">Hero</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">🐻</span>
+              <span class="menu-text">About</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">👹</span>
+              <span class="menu-text">Monsters</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⚙️</span>
+              <span class="menu-text">Mechanics</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🔥</span>
+              <span class="menu-text">Magic</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">💀</span>
+              <span class="menu-text">Dangers</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🖤</span>
+              <span class="menu-text">Figures</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">👑</span>
+              <span class="menu-text">Quests</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">👁️</span>
+              <span class="menu-text">Actions</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">🎒</span>
+              <span class="menu-text">Backpack</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">❤️</span>
+              <span class="menu-text">Hearts</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⚙️</span>
+              <span class="menu-text">Technology</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⚔️</span>
+              <span class="menu-text">Battles</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">⚓</span>
+              <span class="menu-text">Anchors</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⛰️</span>
+              <span class="menu-text">Craft</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🌧️</span>
+              <span class="menu-text">Alchemy</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">📚</span>
+              <span class="menu-text">Library</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">☁️</span>
+              <span class="menu-text">Clouds</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⛏️</span>
+              <span class="menu-text">Mining</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⛩️</span>
+              <span class="menu-text">Dungeons</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">✌️</span>
+              <span class="menu-text">Gestures</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">🃏</span>
+              <span class="menu-text">Cards</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🌿</span>
+              <span class="menu-text">Flora</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🌸</span>
+              <span class="menu-text">Ingredients</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🍽️</span>
+              <span class="menu-text">Culinary</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">💎</span>
+              <span class="menu-text">Loot</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🧬</span>
+              <span class="menu-text">Genetics</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🎭</span>
+              <span class="menu-text">Masks</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🦋</span>
+              <span class="menu-text">Fraction</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">🗺️</span>
+              <span class="menu-text">Maps</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⏳</span>
+              <span class="menu-text">Turn</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⏱️</span>
+              <span class="menu-text">Timer</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">❄️</span>
+              <span class="menu-text">Aspects</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">💎</span>
+              <span class="menu-text">Resources</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🌱</span>
+              <span class="menu-text">Lands</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🍎</span>
+              <span class="menu-text">Food</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🏢</span>
+              <span class="menu-text">Buildings</span>
+            </div>
+          </div>
+          
+          <div class="menu-divider"></div>
+          
+          <div class="menu-section">
+            <div class="menu-item">
+              <span class="menu-icon">🏹</span>
+              <span class="menu-text">Range</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🐰</span>
+              <span class="menu-text">Animals</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">⚖️</span>
+              <span class="menu-text">Trading</span>
+            </div>
+            <div class="menu-item">
+              <span class="menu-icon">🎓</span>
+              <span class="menu-text">Specialist</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div class="middle-area">
       <button id="coordinates-toggle" class="icon-button">👁</button>
       <button id="visibility-toggle" class="icon-button">🌩</button>

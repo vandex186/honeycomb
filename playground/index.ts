@@ -478,6 +478,66 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
 document.addEventListener('DOMContentLoaded', () => {
   const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
   const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+  const burgerMenu = document.getElementById('burger-menu') as HTMLButtonElement
+  const menuOverlay = document.getElementById('menu-overlay') as HTMLDivElement
+  const closeMenu = document.getElementById('close-menu') as HTMLButtonElement
+  
+  // Burger menu functionality
+  if (burgerMenu && menuOverlay && closeMenu) {
+    const openMenu = () => {
+      menuOverlay.classList.add('active')
+      burgerMenu.classList.add('active')
+      document.body.style.overflow = 'hidden'
+    }
+    
+    const closeMenuFunc = () => {
+      menuOverlay.classList.remove('active')
+      burgerMenu.classList.remove('active')
+      document.body.style.overflow = ''
+    }
+    
+    burgerMenu.addEventListener('click', openMenu)
+    burgerMenu.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      openMenu()
+    })
+    
+    closeMenu.addEventListener('click', closeMenuFunc)
+    closeMenu.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      closeMenuFunc()
+    })
+    
+    // Close menu when clicking overlay background
+    menuOverlay.addEventListener('click', (e) => {
+      if (e.target === menuOverlay) {
+        closeMenuFunc()
+      }
+    })
+    
+    // Handle menu item clicks
+    const menuItems = menuOverlay.querySelectorAll('.menu-item[data-view]')
+    menuItems.forEach(item => {
+      const handleMenuClick = (e: Event) => {
+        e.preventDefault()
+        const view = (item as HTMLElement).dataset.view
+        if (view) {
+          currentView = view
+          // Reset states when switching views
+          showCoordinates = false
+          showVisibility = false
+          // Reset button states
+          if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+          if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+          initializeGrid(view)
+          closeMenuFunc()
+        }
+      }
+      
+      item.addEventListener('click', handleMenuClick)
+      item.addEventListener('touchend', handleMenuClick)
+    })
+  }
   
   if (coordinatesToggle) {
     coordinatesToggle.addEventListener('click', () => {
