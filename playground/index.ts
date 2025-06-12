@@ -39,6 +39,27 @@ const CASTLE = {
   opaque: true,
 }
 
+// Orientation detection and splash screen
+function checkOrientation() {
+  const splashScreen = document.getElementById('splash-screen')
+  if (!splashScreen) return
+
+  const isLandscape = window.innerWidth > window.innerHeight
+  
+  if (isLandscape) {
+    splashScreen.classList.remove('show')
+  } else {
+    splashScreen.classList.add('show')
+  }
+}
+
+// Check orientation on load and resize
+window.addEventListener('load', checkOrientation)
+window.addEventListener('resize', checkOrientation)
+window.addEventListener('orientationchange', () => {
+  setTimeout(checkOrientation, 100) // Small delay for orientation change
+})
+
 function createGrid(options: GridOptions) {
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))

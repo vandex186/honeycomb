@@ -9,6 +9,80 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Splash Screen for Orientation */
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.splash-screen.show {
+  display: flex;
+}
+
+.splash-content {
+  text-align: center;
+  color: white;
+  padding: 40px;
+  max-width: 400px;
+}
+
+.phone-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: shake 2s infinite;
+}
+
+.rotate-icon {
+  font-size: 3rem;
+  margin: 20px 0;
+  animation: rotate 2s linear infinite;
+}
+
+.landscape-icon {
+  font-size: 4rem;
+  margin-top: 20px;
+  transform: rotate(90deg);
+  animation: pulse 2s infinite;
+}
+
+.splash-content h2 {
+  font-size: 2rem;
+  margin: 20px 0 10px 0;
+  font-weight: 600;
+}
+
+.splash-content p {
+  font-size: 1.2rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .top-area {
   position: fixed;
   top: 0;
@@ -136,10 +210,9 @@ body {
 
 .menu-popup {
   background: rgba(20, 20, 20, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   width: 90vw;
-  max-width: 600px;
+  max-width: 800px;
   max-height: 85vh;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
@@ -222,8 +295,8 @@ body {
 
 .menu-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
   margin-bottom: 20px;
 }
 
@@ -231,9 +304,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px 15px;
+  background: transparent;
+  border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -245,7 +318,6 @@ body {
 
 .menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
 }
 
@@ -255,16 +327,14 @@ body {
 
 .menu-item[data-view] {
   background: rgba(255, 215, 0, 0.1);
-  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .menu-item[data-view]:hover {
   background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.5);
 }
 
 .menu-icon {
-  font-size: 2rem;
+  font-size: 2.5rem;
   margin-bottom: 8px;
   display: block;
 }
@@ -277,13 +347,13 @@ body {
   line-height: 1.2;
 }
 
-.menu-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 15px 0;
+/* Responsive Design for Menu */
+@media (min-width: 1200px) {
+  .menu-section {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .menu-popup {
     width: 95vw;
@@ -291,17 +361,17 @@ body {
   }
   
   .menu-section {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
   }
   
   .menu-item {
-    padding: 12px 8px;
+    padding: 15px 10px;
     min-height: 70px;
   }
   
   .menu-icon {
-    font-size: 1.8rem;
+    font-size: 2rem;
     margin-bottom: 6px;
   }
   
@@ -320,17 +390,17 @@ body {
 
 @media (max-width: 480px) {
   .menu-section {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
   }
   
   .menu-item {
-    padding: 10px 6px;
+    padding: 12px 8px;
     min-height: 60px;
   }
   
   .menu-icon {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     margin-bottom: 4px;
   }
   
@@ -470,7 +540,7 @@ body:not([data-view="castle"]) .icon-button {
 .hex-grid text {
   fill: currentColor;
   user-select: none;
-  font-size: 1rem; /* Reduced from 1.5rem to 1rem */
+  font-size: 1rem;
   pointer-events: none;
   color: white;
 }
@@ -485,16 +555,16 @@ body:not([data-view="castle"]) .icon-button {
   opacity: 1;
 }
 
-/* Terrain text styles - face to camera, no transformation */
+/* Terrain text styles */
 .terrain-text {
   fill: #ffff00 !important;
   font-weight: bold !important;
-  font-size: 1.5rem !important; /* Reduced from 2rem to 1.5rem */
+  font-size: 1.5rem !important;
   user-select: none !important;
   pointer-events: none !important;
 }
 
-/* Visibility grid styles - NO BORDERS between same visibility states */
+/* Visibility grid styles */
 .visibility-undiscovered {
   fill: rgba(0, 0, 0, 0.8) !important;
   stroke: none !important;
