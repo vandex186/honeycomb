@@ -39,6 +39,22 @@ const CASTLE = {
   opaque: true,
 }
 
+// Avatar content data for different views
+const avatarData = {
+  dungeon: {
+    title: 'Dungeon Explorer',
+    stats: ['Level: 12', 'HP: 85/100', 'Gold: 1,250']
+  },
+  hero: {
+    title: 'Hero Profile',
+    stats: ['Strength: 18', 'Agility: 15', 'Magic: 12']
+  },
+  castle: {
+    title: 'Castle Lord',
+    stats: ['Territory: 5', 'Army: 250', 'Resources: 850']
+  }
+}
+
 // Orientation detection and splash screen
 function checkOrientation() {
   const splashScreen = document.getElementById('splash-screen')
@@ -91,8 +107,21 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
   )
 }
 
+function updateAvatarContent(view: string) {
+  const avatarTitle = document.getElementById('avatar-title')
+  const avatarStats = document.getElementById('avatar-stats')
+  
+  if (avatarTitle && avatarStats) {
+    const data = avatarData[view as keyof typeof avatarData] || avatarData.dungeon
+    avatarTitle.textContent = data.title
+    avatarStats.innerHTML = data.stats.map(stat => `<span class="stat">${stat}</span>`).join('')
+  }
+}
+
 function initializeGrid(view: string) {
   document.body.setAttribute('data-view', view)
+  updateAvatarContent(view)
+  
   const container = document.getElementById('container')
   if (container) {
     container.innerHTML = '' // Clear previous content
