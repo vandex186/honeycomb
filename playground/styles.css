@@ -126,6 +126,52 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Navigation Buttons Container */
+.nav-buttons-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.nav-tab-button {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-tab-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.nav-tab-button:active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0.98);
+}
+
+.nav-tab-button.active {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
 .middle-area {
   position: fixed;
   top: 15vh;
@@ -421,6 +467,17 @@ body {
     font-size: 0.8rem;
     gap: 10px;
   }
+
+  .nav-tab-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .nav-buttons-container {
+    gap: 8px;
+    padding: 6px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -466,6 +523,22 @@ body {
 
   .stat {
     padding: 1px 6px;
+  }
+
+  .nav-tab-button {
+    width: 35px;
+    height: 35px;
+    font-size: 1.3rem;
+  }
+
+  .nav-buttons-container {
+    gap: 6px;
+    padding: 4px;
+  }
+
+  .top-area {
+    gap: 1rem;
+    padding: 0 15px;
   }
 }
 

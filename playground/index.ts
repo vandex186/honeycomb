@@ -52,6 +52,10 @@ const avatarData = {
   castle: {
     title: 'Castle Lord',
     stats: ['Territory: 5', 'Army: 250', 'Resources: 850']
+  },
+  library: {
+    title: 'Scholar',
+    stats: ['Books: 47', 'Spells: 23', 'Research: 89%']
   }
 }
 
@@ -118,9 +122,20 @@ function updateAvatarContent(view: string) {
   }
 }
 
+function updateNavButtonStates(activeView: string) {
+  // Update navigation tab buttons
+  document.querySelectorAll('.nav-tab-button').forEach(btn => {
+    btn.classList.remove('active')
+    if ((btn as HTMLElement).dataset.view === activeView) {
+      btn.classList.add('active')
+    }
+  })
+}
+
 function initializeGrid(view: string) {
   document.body.setAttribute('data-view', view)
   updateAvatarContent(view)
+  updateNavButtonStates(view)
   
   const container = document.getElementById('container')
   if (container) {
@@ -144,6 +159,38 @@ function initializeGrid(view: string) {
         height: 11  // Increased to accommodate 5 rings
       }
       break
+    case 'library':
+      if (container) {
+        container.innerHTML = `
+          <div style="color: white; font-size: 2rem; text-align: center; padding: 40px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">📚</div>
+            <h2 style="color: #ffd700; margin-bottom: 20px;">Library of Knowledge</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto;">
+              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                <div style="font-size: 2rem; margin-bottom: 10px;">📖</div>
+                <h3 style="color: #ffd700; margin-bottom: 10px;">Spell Books</h3>
+                <p style="font-size: 1rem; opacity: 0.8;">Ancient tomes containing powerful magic spells and incantations.</p>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                <div style="font-size: 2rem; margin-bottom: 10px;">🗺️</div>
+                <h3 style="color: #ffd700; margin-bottom: 10px;">Maps & Charts</h3>
+                <p style="font-size: 1rem; opacity: 0.8;">Detailed maps of dungeons, territories, and hidden treasures.</p>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                <div style="font-size: 2rem; margin-bottom: 10px;">⚗️</div>
+                <h3 style="color: #ffd700; margin-bottom: 10px;">Alchemy Guide</h3>
+                <p style="font-size: 1rem; opacity: 0.8;">Recipes and formulas for creating potions and magical items.</p>
+              </div>
+              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                <div style="font-size: 2rem; margin-bottom: 10px;">🏛️</div>
+                <h3 style="color: #ffd700; margin-bottom: 10px;">History</h3>
+                <p style="font-size: 1rem; opacity: 0.8;">Chronicles of ancient civilizations and legendary heroes.</p>
+              </div>
+            </div>
+          </div>
+        `
+      }
+      return
     default:
       gridOptions = {
         orientation: Orientation.POINTY,
@@ -622,12 +669,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-// Setup navigation for all buttons (nav-button and nav-circle)
+// Setup navigation for all buttons (nav-button, nav-circle, and nav-tab-button)
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement
   
-  // Handle both nav-button and nav-circle clicks
-  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle')) {
+  // Handle nav-button, nav-circle, and nav-tab-button clicks
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle') || target.classList.contains('nav-tab-button')) {
     e.preventDefault()
     const view = target.dataset.view
     if (view) {
@@ -655,7 +702,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('touchend', (e) => {
   const target = e.target as HTMLElement
   
-  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle')) {
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle') || target.classList.contains('nav-tab-button')) {
     e.preventDefault()
     const view = target.dataset.view
     if (view) {
