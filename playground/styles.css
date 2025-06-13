@@ -284,7 +284,7 @@ body {
   background: rgba(20, 20, 20, 0.95);
   border-radius: 12px;
   width: 90vw;
-  max-width: 600px;
+  max-width: 800px;
   max-height: 85vh;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
@@ -357,23 +357,19 @@ body {
 .menu-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 5px;
 }
 
-.menu-section:nth-child(2) {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.menu-section:nth-child(3) {
-  grid-template-columns: repeat(2, 1fr);
+.menu-section:not(:first-child) {
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .menu-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 15px;
+  padding: 12px 8px;
   background: transparent;
   border: none;
   border-radius: 8px;
@@ -381,7 +377,7 @@ body {
   transition: all 0.3s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  min-height: 80px;
+  min-height: 60px;
   justify-content: center;
 }
 
@@ -403,45 +399,23 @@ body {
 }
 
 .menu-icon {
-  font-size: 2.5rem;
-  margin-bottom: 8px;
+  font-size: 2rem;
+  margin-bottom: 4px;
   display: block;
 }
 
 .menu-text {
   color: white;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-align: center;
   line-height: 1.2;
 }
 
-/* Library Items */
-.library-item {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-height: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.library-item:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  border-color: rgba(255, 215, 0, 0.5);
-}
-
 /* Responsive Design for Menu */
 @media (min-width: 1200px) {
-  .menu-section {
-    grid-template-columns: repeat(4, 1fr);
+  .menu-section:not(:first-child) {
+    grid-template-columns: repeat(8, 1fr);
   }
 }
 
@@ -451,23 +425,23 @@ body {
     max-height: 90vh;
   }
   
-  .menu-section {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+  .menu-section:not(:first-child) {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
   }
   
   .menu-item {
-    padding: 15px 10px;
-    min-height: 70px;
+    padding: 10px 6px;
+    min-height: 55px;
   }
   
   .menu-icon {
-    font-size: 2rem;
-    margin-bottom: 6px;
+    font-size: 1.8rem;
+    margin-bottom: 3px;
   }
   
   .menu-text {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
   }
   
   .menu-content {
@@ -507,23 +481,23 @@ body {
 }
 
 @media (max-width: 480px) {
-  .menu-section {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  .menu-section:not(:first-child) {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
   }
   
   .menu-item {
-    padding: 12px 8px;
-    min-height: 60px;
+    padding: 8px 4px;
+    min-height: 50px;
   }
   
   .menu-icon {
-    font-size: 1.8rem;
-    margin-bottom: 4px;
+    font-size: 1.6rem;
+    margin-bottom: 2px;
   }
   
   .menu-text {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
   }
 
   .user-avatar-container {
@@ -636,42 +610,6 @@ body:not([data-view="castle"]) .icon-button {
   align-items: center;
   gap: 10px;
   height: 100%;
-}
-
-.center-controls {
-  flex: 1;
-  justify-content: center;
-}
-
-.bottom-menu {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.bottom-menu-button {
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-.bottom-menu-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.05);
-}
-
-.bottom-menu-button:active {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(0.98);
 }
 
 .control-button {
