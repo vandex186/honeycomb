@@ -31,6 +31,7 @@ let mainGrid: Grid<CustomHex | VerticalHex>
 let currentView = 'dungeon'
 let showCoordinates = false
 let showVisibility = false
+let currentLibraryContent: string | null = null
 
 // New Castle terrain type
 const CASTLE = {
@@ -59,26 +60,234 @@ const avatarData = {
   }
 }
 
-// Orientation detection and splash screen
-function checkOrientation() {
-  const splashScreen = document.getElementById('splash-screen')
-  if (!splashScreen) return
-
-  const isLandscape = window.innerWidth > window.innerHeight
-  
-  if (isLandscape) {
-    splashScreen.classList.remove('show')
-  } else {
-    splashScreen.classList.add('show')
+// Library content data
+const libraryContent = {
+  castle: {
+    icon: '🏰',
+    title: 'Castle Management',
+    content: 'Learn about castle construction, defense strategies, and managing your stronghold. Includes blueprints for towers, walls, and fortifications.'
+  },
+  buildings: {
+    icon: '🏢',
+    title: 'Buildings & Structures',
+    content: 'Comprehensive guide to all building types: residential, commercial, military, and special structures. Each building type has unique benefits and requirements.'
+  },
+  upgrades: {
+    icon: '🪚',
+    title: 'Upgrades & Improvements',
+    content: 'Enhancement systems for buildings, weapons, and equipment. Learn about upgrade paths, resource requirements, and efficiency improvements.'
+  },
+  dungeons: {
+    icon: '⛩',
+    title: 'Dungeon Exploration',
+    content: 'Complete guide to dungeon types, monster encounters, treasure locations, and survival strategies. Includes maps of known dungeons.'
+  },
+  clouds: {
+    icon: '☁️',
+    title: 'Weather & Climate',
+    content: 'Understanding weather patterns, seasonal changes, and their effects on gameplay. Weather can affect travel, combat, and resource gathering.'
+  },
+  citizens: {
+    icon: '👨‍⚕️',
+    title: 'Citizens & NPCs',
+    content: 'Information about different citizen types, their roles, needs, and how to manage population happiness and productivity.'
+  },
+  turns: {
+    icon: '⏳',
+    title: 'Turn Management',
+    content: 'Strategic guide to turn-based gameplay, action points, time management, and optimizing your moves for maximum efficiency.'
+  },
+  lands: {
+    icon: '⛳',
+    title: 'Lands & Territories',
+    content: 'Exploration of different land types, territorial control, expansion strategies, and managing multiple regions effectively.'
+  },
+  animals: {
+    icon: '🐑',
+    title: 'Animals & Livestock',
+    content: 'Guide to animal husbandry, wildlife management, breeding programs, and the benefits of different animal types.'
+  },
+  flora: {
+    icon: '🌳',
+    title: 'Flora & Vegetation',
+    content: 'Botanical knowledge including medicinal plants, rare herbs, magical flora, and their uses in crafting and alchemy.'
+  },
+  food: {
+    icon: '🍎',
+    title: 'Food & Nutrition',
+    content: 'Food production, preservation techniques, nutritional benefits, and special recipes that provide gameplay bonuses.'
+  },
+  resources: {
+    icon: '💎',
+    title: 'Resources & Materials',
+    content: 'Complete catalog of all resources: common materials, rare gems, magical components, and their applications in crafting.'
+  },
+  structures: {
+    icon: '🏠',
+    title: 'Structures & Architecture',
+    content: 'Architectural principles, structural engineering, and design patterns for creating efficient and beautiful constructions.'
+  },
+  objects: {
+    icon: '🗿',
+    title: 'Objects & Artifacts',
+    content: 'Catalog of special objects, ancient artifacts, magical items, and their historical significance and powers.'
+  },
+  budget: {
+    icon: '💰',
+    title: 'Budget & Economics',
+    content: 'Financial management, trade systems, taxation, resource allocation, and economic strategies for prosperity.'
+  },
+  hero: {
+    icon: '🐵',
+    title: 'Hero Development',
+    content: 'Character progression, skill trees, attribute development, and strategies for creating powerful hero builds.'
+  },
+  level: {
+    icon: '🏆',
+    title: 'Level & Experience',
+    content: 'Experience systems, leveling mechanics, milestone rewards, and progression optimization strategies.'
+  },
+  weapon: {
+    icon: '🗡',
+    title: 'Weapons & Combat',
+    content: 'Weapon types, combat mechanics, fighting techniques, and weapon enhancement systems for maximum effectiveness.'
+  },
+  gestures: {
+    icon: '✌️',
+    title: 'Gestures & Commands',
+    content: 'Control schemes, gesture commands, hotkeys, and interface optimization for efficient gameplay.'
+  },
+  magic: {
+    icon: '🔥',
+    title: 'Magic & Spells',
+    content: 'Magical systems, spell casting, mana management, elemental magic, and advanced magical techniques.'
+  },
+  aspects: {
+    icon: '✨',
+    title: 'Aspects & Elements',
+    content: 'Elemental aspects, their interactions, strengths and weaknesses, and how to harness elemental powers effectively.'
+  },
+  fraction: {
+    icon: '🦋',
+    title: 'Fractions & Guilds',
+    content: 'Political factions, guild systems, alliance mechanics, and diplomatic strategies for faction management.'
+  },
+  backpack: {
+    icon: '🎒',
+    title: 'Inventory & Storage',
+    content: 'Inventory management, storage solutions, item organization, and capacity optimization techniques.'
+  },
+  items: {
+    icon: '🏹',
+    title: 'Items & Equipment',
+    content: 'Complete item database, equipment stats, set bonuses, and optimal equipment combinations for different playstyles.'
+  },
+  masks: {
+    icon: '🎭',
+    title: 'Masks & Disguises',
+    content: 'Disguise systems, stealth mechanics, social infiltration, and the art of deception in diplomatic missions.'
+  },
+  hearts: {
+    icon: '❤️‍🔥',
+    title: 'Hearts & Relationships',
+    content: 'Relationship systems, romance options, friendship mechanics, and social interaction strategies.'
+  },
+  fight: {
+    icon: '⚔️',
+    title: 'Combat & Tactics',
+    content: 'Advanced combat strategies, tactical formations, battle planning, and victory conditions for different combat scenarios.'
+  },
+  creatures: {
+    icon: '🐙',
+    title: 'Creatures & Monsters',
+    content: 'Bestiary of all creatures, their behaviors, weaknesses, and strategies for combat or taming.'
+  },
+  loot: {
+    icon: '🫀',
+    title: 'Loot & Rewards',
+    content: 'Loot systems, treasure hunting, reward mechanics, and strategies for maximizing valuable discoveries.'
+  },
+  ingredients: {
+    icon: '🌸',
+    title: 'Ingredients & Components',
+    content: 'Crafting ingredients, their sources, properties, and optimal harvesting techniques for maximum yield.'
+  },
+  coins: {
+    icon: '🪙',
+    title: 'Currency & Trade',
+    content: 'Economic systems, currency types, trade routes, market dynamics, and wealth accumulation strategies.'
+  },
+  timer: {
+    icon: '⏱️',
+    title: 'Time & Scheduling',
+    content: 'Time management systems, scheduling mechanics, deadline management, and temporal strategy optimization.'
+  },
+  mechanics: {
+    icon: '⚙️',
+    title: 'Game Mechanics',
+    content: 'Core gameplay systems, rule explanations, mechanical interactions, and advanced technique guides.'
+  },
+  knowledge: {
+    icon: '📚',
+    title: 'Knowledge & Lore',
+    content: 'Historical records, world lore, ancient knowledge, and scholarly research on various topics.'
+  },
+  genetics: {
+    icon: '🧬',
+    title: 'Genetics & Breeding',
+    content: 'Genetic systems, breeding mechanics, trait inheritance, and optimization of genetic combinations.'
+  },
+  craft: {
+    icon: '🛠',
+    title: 'Crafting & Creation',
+    content: 'Crafting systems, recipe databases, material combinations, and advanced crafting techniques.'
+  },
+  alchemy: {
+    icon: '⚗',
+    title: 'Alchemy & Potions',
+    content: 'Alchemical processes, potion brewing, magical transmutation, and advanced alchemical theories.'
+  },
+  calligraphy: {
+    icon: '📜',
+    title: 'Calligraphy & Scripts',
+    content: 'Ancient scripts, magical writing, enchanted scrolls, and the art of magical calligraphy.'
+  },
+  mining: {
+    icon: '⛏️',
+    title: 'Mining & Extraction',
+    content: 'Mining techniques, ore identification, extraction methods, and geological survey strategies.'
+  },
+  culinary: {
+    icon: '🍽️',
+    title: 'Culinary Arts',
+    content: 'Cooking techniques, recipe development, food enhancement, and the magical properties of cuisine.'
+  },
+  cultivating: {
+    icon: '🪴',
+    title: 'Cultivation & Farming',
+    content: 'Agricultural techniques, crop rotation, soil management, and magical plant cultivation methods.'
+  },
+  trading: {
+    icon: '⚖️',
+    title: 'Trading & Commerce',
+    content: 'Trade negotiations, market analysis, commercial strategies, and building successful trading empires.'
+  },
+  map: {
+    icon: '🗺️',
+    title: 'Maps & Navigation',
+    content: 'Cartography, navigation techniques, map reading, and exploration strategies for unknown territories.'
+  },
+  anchors: {
+    icon: '⚓',
+    title: 'Anchors & Waypoints',
+    content: 'Navigation anchors, waypoint systems, fast travel mechanics, and strategic positioning guides.'
+  },
+  space: {
+    icon: '🚀',
+    title: 'Space Pirates',
+    content: 'Advanced exploration, space travel mechanics, pirate encounters, and interstellar adventure strategies.'
   }
 }
-
-// Check orientation on load and resize
-window.addEventListener('load', checkOrientation)
-window.addEventListener('resize', checkOrientation)
-window.addEventListener('orientationchange', () => {
-  setTimeout(checkOrientation, 100) // Small delay for orientation change
-})
 
 function createGrid(options: GridOptions) {
   const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
@@ -112,14 +321,7 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
 }
 
 function updateAvatarContent(view: string) {
-  const avatarTitle = document.getElementById('avatar-title')
-  const avatarStats = document.getElementById('avatar-stats')
-  
-  if (avatarTitle && avatarStats) {
-    const data = avatarData[view as keyof typeof avatarData] || avatarData.dungeon
-    avatarTitle.textContent = data.title
-    avatarStats.innerHTML = data.stats.map(stat => `<span class="stat">${stat}</span>`).join('')
-  }
+  // Avatar is now just a circle, no additional content needed
 }
 
 function updateNavButtonStates(activeView: string) {
@@ -131,6 +333,269 @@ function updateNavButtonStates(activeView: string) {
     }
   })
 }
+
+function showLibraryContent(contentKey: string) {
+  const container = document.getElementById('container')
+  if (!container) return
+
+  const content = libraryContent[contentKey as keyof typeof libraryContent]
+  if (!content) return
+
+  currentLibraryContent = contentKey
+  
+  container.innerHTML = `
+    <div class="content-page">
+      <div class="content-header">
+        <div class="content-title">
+          <span style="font-size: 3rem;">${content.icon}</span>
+          <span>${content.title}</span>
+        </div>
+        <button class="back-button" onclick="showLibraryMain()">← Back to Library</button>
+      </div>
+      <div class="content-body">
+        <p>${content.content}</p>
+      </div>
+    </div>
+  `
+}
+
+function showLibraryMain() {
+  currentLibraryContent = null
+  const container = document.getElementById('container')
+  if (!container) return
+
+  container.innerHTML = `
+    <div class="library-container">
+      <div class="library-header">
+        <div style="font-size: 4rem; margin-bottom: 10px;">📚</div>
+        <h1 class="library-title">Library of Knowledge</h1>
+        <p class="library-subtitle">Explore the vast collection of wisdom and information</p>
+      </div>
+      
+      <div class="library-categories">
+        <div class="category-section">
+          <h2 class="category-title">🏰 Castle & Lands</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('castle')">
+              <div class="library-button-icon">🏰</div>
+              <div class="library-button-text">Castle</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('buildings')">
+              <div class="library-button-icon">🏢</div>
+              <div class="library-button-text">Buildings</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('upgrades')">
+              <div class="library-button-icon">🪚</div>
+              <div class="library-button-text">Upgrades</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('dungeons')">
+              <div class="library-button-icon">⛩</div>
+              <div class="library-button-text">Dungeons</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('clouds')">
+              <div class="library-button-icon">☁️</div>
+              <div class="library-button-text">Clouds</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('citizens')">
+              <div class="library-button-icon">👨‍⚕️</div>
+              <div class="library-button-text">Citizens</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('turns')">
+              <div class="library-button-icon">⏳</div>
+              <div class="library-button-text">Turns</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🌍 World & Resources</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('lands')">
+              <div class="library-button-icon">⛳</div>
+              <div class="library-button-text">Lands</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('animals')">
+              <div class="library-button-icon">🐑</div>
+              <div class="library-button-text">Animals</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('flora')">
+              <div class="library-button-icon">🌳</div>
+              <div class="library-button-text">Flora</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('food')">
+              <div class="library-button-icon">🍎</div>
+              <div class="library-button-text">Food</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('resources')">
+              <div class="library-button-icon">💎</div>
+              <div class="library-button-text">Resources</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('structures')">
+              <div class="library-button-icon">🏠</div>
+              <div class="library-button-text">Structures</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('objects')">
+              <div class="library-button-icon">🗿</div>
+              <div class="library-button-text">Objects</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('budget')">
+              <div class="library-button-icon">💰</div>
+              <div class="library-button-text">Budget</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🦊 Hero & Character</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('hero')">
+              <div class="library-button-icon">🐵</div>
+              <div class="library-button-text">Hero</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('level')">
+              <div class="library-button-icon">🏆</div>
+              <div class="library-button-text">Level</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('weapon')">
+              <div class="library-button-icon">🗡</div>
+              <div class="library-button-text">Weapon</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('gestures')">
+              <div class="library-button-icon">✌️</div>
+              <div class="library-button-text">Gestures</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('magic')">
+              <div class="library-button-icon">🔥</div>
+              <div class="library-button-text">Magic</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('aspects')">
+              <div class="library-button-icon">✨</div>
+              <div class="library-button-text">Aspects</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('fraction')">
+              <div class="library-button-icon">🦋</div>
+              <div class="library-button-text">Fraction</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('backpack')">
+              <div class="library-button-icon">🎒</div>
+              <div class="library-button-text">Backpack</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('items')">
+              <div class="library-button-icon">🏹</div>
+              <div class="library-button-text">Items</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('masks')">
+              <div class="library-button-icon">🎭</div>
+              <div class="library-button-text">Masks</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('hearts')">
+              <div class="library-button-icon">❤️‍🔥</div>
+              <div class="library-button-text">Hearts</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">⚔️ Combat & Adventure</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('fight')">
+              <div class="library-button-icon">⚔️</div>
+              <div class="library-button-text">Fight</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('creatures')">
+              <div class="library-button-icon">🐙</div>
+              <div class="library-button-text">Creatures</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('loot')">
+              <div class="library-button-icon">🫀</div>
+              <div class="library-button-text">Loot</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('ingredients')">
+              <div class="library-button-icon">🌸</div>
+              <div class="library-button-text">Ingredients</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('coins')">
+              <div class="library-button-icon">🪙</div>
+              <div class="library-button-text">Coins</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('timer')">
+              <div class="library-button-icon">⏱️</div>
+              <div class="library-button-text">Timer</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🔬 Crafting & Knowledge</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('mechanics')">
+              <div class="library-button-icon">⚙️</div>
+              <div class="library-button-text">Mechanics</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('knowledge')">
+              <div class="library-button-icon">📚</div>
+              <div class="library-button-text">Knowledge</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('genetics')">
+              <div class="library-button-icon">🧬</div>
+              <div class="library-button-text">Genetics</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('craft')">
+              <div class="library-button-icon">🛠</div>
+              <div class="library-button-text">Craft</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('alchemy')">
+              <div class="library-button-icon">⚗</div>
+              <div class="library-button-text">Alchemy</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('calligraphy')">
+              <div class="library-button-icon">📜</div>
+              <div class="library-button-text">Calligraphy</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('mining')">
+              <div class="library-button-icon">⛏️</div>
+              <div class="library-button-text">Mining</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('culinary')">
+              <div class="library-button-icon">🍽️</div>
+              <div class="library-button-text">Culinary</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('cultivating')">
+              <div class="library-button-icon">🪴</div>
+              <div class="library-button-text">Cultivating</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('trading')">
+              <div class="library-button-icon">⚖️</div>
+              <div class="library-button-text">Trading</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🗺️ Exploration & Navigation</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('map')">
+              <div class="library-button-icon">🗺️</div>
+              <div class="library-button-text">Map</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('anchors')">
+              <div class="library-button-icon">⚓</div>
+              <div class="library-button-text">Anchors</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('space')">
+              <div class="library-button-icon">🚀</div>
+              <div class="library-button-text">Space Pirates</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+// Make functions globally available
+;(window as any).showLibraryContent = showLibraryContent
+;(window as any).showLibraryMain = showLibraryMain
 
 function initializeGrid(view: string) {
   document.body.setAttribute('data-view', view)
@@ -160,36 +625,7 @@ function initializeGrid(view: string) {
       }
       break
     case 'library':
-      if (container) {
-        container.innerHTML = `
-          <div style="color: white; font-size: 2rem; text-align: center; padding: 40px;">
-            <div style="font-size: 4rem; margin-bottom: 20px;">📚</div>
-            <h2 style="color: #ffd700; margin-bottom: 20px;">Library of Knowledge</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto;">
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">📖</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">Spell Books</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Ancient tomes containing powerful magic spells and incantations.</p>
-              </div>
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">🗺️</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">Maps & Charts</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Detailed maps of dungeons, territories, and hidden treasures.</p>
-              </div>
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">⚗️</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">Alchemy Guide</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Recipes and formulas for creating potions and magical items.</p>
-              </div>
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">🏛️</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">History</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Chronicles of ancient civilizations and legendary heroes.</p>
-              </div>
-            </div>
-          </div>
-        `
-      }
+      showLibraryMain()
       return
     default:
       gridOptions = {
@@ -633,6 +1069,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Reset states when switching views
           showCoordinates = false
           showVisibility = false
+          currentLibraryContent = null
           // Reset button states
           if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
           if (visibilityToggle) visibilityToggle.style.background = 'transparent'
@@ -688,6 +1125,7 @@ document.addEventListener('click', (e) => {
       // Reset states when switching views
       showCoordinates = false
       showVisibility = false
+      currentLibraryContent = null
       // Reset button states
       const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
       const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
@@ -716,6 +1154,7 @@ document.addEventListener('touchend', (e) => {
       // Reset states when switching views
       showCoordinates = false
       showVisibility = false
+      currentLibraryContent = null
       // Reset button states
       const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
       const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement

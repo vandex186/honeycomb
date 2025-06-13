@@ -7,41 +7,25 @@
     <link rel="stylesheet" href="/playground/styles.css" />
   </head>
   <body>
-    <!-- Splash Screen for Orientation -->
-    <div class="splash-screen" id="splash-screen">
-      <div class="splash-content">
-        <div class="phone-icon">📱</div>
-        <h2>Please Rotate Your Device</h2>
-        <p>This game is designed for horizontal orientation</p>
-        <div class="landscape-icon">📱</div>
-      </div>
-    </div>
-
     <div class="top-area">
       <div class="user-avatar-container" id="user-avatar-container">
         <div class="avatar-icon">🦊</div>
-        <div class="avatar-content" id="avatar-content">
-          <div class="avatar-title" id="avatar-title">Dungeon Explorer</div>
-          <div class="avatar-stats" id="avatar-stats">
-            <span class="stat">Level: 12</span>
-            <span class="stat">HP: 85/100</span>
-            <span class="stat">Gold: 1,250</span>
-          </div>
+      </div>
+      
+      <div class="nav-container">
+        <div class="nav-buttons-container">
+          <button class="nav-tab-button" data-view="castle">🏰</button>
+          <button class="nav-tab-button" data-view="dungeon">⛩</button>
+          <button class="nav-tab-button" data-view="hero">🦊</button>
+          <button class="nav-tab-button" data-view="library">📚</button>
         </div>
+        
+        <button class="burger-menu" id="burger-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
-      
-      <div class="nav-buttons-container">
-        <button class="nav-tab-button" data-view="castle">🏰</button>
-        <button class="nav-tab-button" data-view="dungeon">⛩</button>
-        <button class="nav-tab-button" data-view="hero">🦊</button>
-        <button class="nav-tab-button" data-view="library">📚</button>
-      </div>
-      
-      <button class="burger-menu" id="burger-menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
     </div>
     
     <!-- Popup Menu Overlay -->
@@ -61,6 +45,10 @@
             <div class="menu-item" data-view="hero">
               <span class="menu-icon">🦊</span>
               <span class="menu-text">Hero</span>
+            </div>
+            <div class="menu-item" data-view="library">
+              <span class="menu-icon">📚</span>
+              <span class="menu-text">Library</span>
             </div>
           </div>
           
@@ -120,7 +108,7 @@
     <div id="container">
       <script type="module" src="/playground/index.ts"></script>
     </div>
-    <div class="bottom-area">
+    <div class="bottom-area" id="bottom-area">
       <div class="left-controls">
         <button class="control-button nav-circle" data-view="hero">🦊</button>
         <div class="control-area"></div>
