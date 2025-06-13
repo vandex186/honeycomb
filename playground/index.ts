@@ -42,18 +42,22 @@ const CASTLE = {
 // Avatar content data for different views
 const avatarData = {
   dungeon: {
+    icon: '🦊',
     title: 'Dungeon Explorer',
     stats: ['Level: 12', 'HP: 85/100', 'Gold: 1,250']
   },
   hero: {
+    icon: '🏰',
     title: 'Hero Profile',
     stats: ['Strength: 18', 'Agility: 15', 'Magic: 12']
   },
   castle: {
+    icon: '🦊',
     title: 'Castle Lord',
     stats: ['Territory: 5', 'Army: 250', 'Resources: 850']
   },
   library: {
+    icon: '🏰',
     title: 'Scholar',
     stats: ['Books: 47', 'Spells: 23', 'Research: 89%']
   }
@@ -112,11 +116,13 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
 }
 
 function updateAvatarContent(view: string) {
+  const avatarIcon = document.getElementById('avatar-icon')
   const avatarTitle = document.getElementById('avatar-title')
   const avatarStats = document.getElementById('avatar-stats')
   
-  if (avatarTitle && avatarStats) {
+  if (avatarIcon && avatarTitle && avatarStats) {
     const data = avatarData[view as keyof typeof avatarData] || avatarData.dungeon
+    avatarIcon.textContent = data.icon
     avatarTitle.textContent = data.title
     avatarStats.innerHTML = data.stats.map(stat => `<span class="stat">${stat}</span>`).join('')
   }
@@ -162,29 +168,95 @@ function initializeGrid(view: string) {
     case 'library':
       if (container) {
         container.innerHTML = `
-          <div style="color: white; font-size: 2rem; text-align: center; padding: 40px;">
-            <div style="font-size: 4rem; margin-bottom: 20px;">📚</div>
-            <h2 style="color: #ffd700; margin-bottom: 20px;">Library of Knowledge</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto;">
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">📖</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">Spell Books</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Ancient tomes containing powerful magic spells and incantations.</p>
+          <div style="color: white; font-size: 1.5rem; text-align: center; padding: 20px; max-width: 1200px; margin: 0 auto;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">📚</div>
+            <h2 style="color: #ffd700; margin-bottom: 30px; font-size: 2rem;">Library of Knowledge</h2>
+            
+            <!-- Castle Management Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #ffd700; margin-bottom: 15px; font-size: 1.3rem;">🏰 Castle Management</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div class="library-item"><span style="font-size: 1.5rem;">🏰</span><br><span style="font-size: 0.8rem;">Castle</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🏢</span><br><span style="font-size: 0.8rem;">Buildings</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🪚</span><br><span style="font-size: 0.8rem;">Upgrades</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⛩</span><br><span style="font-size: 0.8rem;">Dungeons</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">☁️</span><br><span style="font-size: 0.8rem;">Clouds</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">👨‍⚕️</span><br><span style="font-size: 0.8rem;">Citizens</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⏳</span><br><span style="font-size: 0.8rem;">Turns</span></div>
               </div>
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">🗺️</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">Maps & Charts</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Detailed maps of dungeons, territories, and hidden treasures.</p>
+            </div>
+
+            <!-- Resources Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #ffd700; margin-bottom: 15px; font-size: 1.3rem;">🌍 Resources & Environment</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div class="library-item"><span style="font-size: 1.5rem;">⛳</span><br><span style="font-size: 0.8rem;">Lands</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🐑</span><br><span style="font-size: 0.8rem;">Animals</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🌳</span><br><span style="font-size: 0.8rem;">Flora</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🍎</span><br><span style="font-size: 0.8rem;">Food</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">💎</span><br><span style="font-size: 0.8rem;">Resources</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🏠</span><br><span style="font-size: 0.8rem;">Structures</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🗿</span><br><span style="font-size: 0.8rem;">Objects</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">💰</span><br><span style="font-size: 0.8rem;">Budget</span></div>
               </div>
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">⚗️</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">Alchemy Guide</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Recipes and formulas for creating potions and magical items.</p>
+            </div>
+
+            <!-- Hero Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #ffd700; margin-bottom: 15px; font-size: 1.3rem;">🦸 Hero Development</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div class="library-item"><span style="font-size: 1.5rem;">🐵</span><br><span style="font-size: 0.8rem;">Hero</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🏆</span><br><span style="font-size: 0.8rem;">Level</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🗡</span><br><span style="font-size: 0.8rem;">Weapon</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">✌️</span><br><span style="font-size: 0.8rem;">Gestures</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🔥</span><br><span style="font-size: 0.8rem;">Magic</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">✨</span><br><span style="font-size: 0.8rem;">Aspects</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🦋</span><br><span style="font-size: 0.8rem;">Fraction</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🎒</span><br><span style="font-size: 0.8rem;">Backpack</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🏹</span><br><span style="font-size: 0.8rem;">Items</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🎭</span><br><span style="font-size: 0.8rem;">Masks</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">❤️‍🔥</span><br><span style="font-size: 0.8rem;">Hearts</span></div>
               </div>
-              <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                <div style="font-size: 2rem; margin-bottom: 10px;">🏛️</div>
-                <h3 style="color: #ffd700; margin-bottom: 10px;">History</h3>
-                <p style="font-size: 1rem; opacity: 0.8;">Chronicles of ancient civilizations and legendary heroes.</p>
+            </div>
+
+            <!-- Combat Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #ffd700; margin-bottom: 15px; font-size: 1.3rem;">⚔️ Combat & Adventure</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div class="library-item"><span style="font-size: 1.5rem;">⚔️</span><br><span style="font-size: 0.8rem;">Fight</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🐙</span><br><span style="font-size: 0.8rem;">Creatures</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🫀</span><br><span style="font-size: 0.8rem;">Loot</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🌸</span><br><span style="font-size: 0.8rem;">Ingredients</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🪙</span><br><span style="font-size: 0.8rem;">Coins</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⏱️</span><br><span style="font-size: 0.8rem;">Timer</span></div>
+              </div>
+            </div>
+
+            <!-- Crafting Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #ffd700; margin-bottom: 15px; font-size: 1.3rem;">🔧 Crafting & Skills</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div class="library-item"><span style="font-size: 1.5rem;">⚙️</span><br><span style="font-size: 0.8rem;">Mechanics</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">📚</span><br><span style="font-size: 0.8rem;">Knowledge</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🧬</span><br><span style="font-size: 0.8rem;">Genetics</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🛠</span><br><span style="font-size: 0.8rem;">Mechanics</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⚒</span><br><span style="font-size: 0.8rem;">Craft</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⚗</span><br><span style="font-size: 0.8rem;">Alchemy</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">📜</span><br><span style="font-size: 0.8rem;">Calligraphy</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⛏️</span><br><span style="font-size: 0.8rem;">Mining</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🍽️</span><br><span style="font-size: 0.8rem;">Culinary</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🪴</span><br><span style="font-size: 0.8rem;">Cultivating</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⚖️</span><br><span style="font-size: 0.8rem;">Trading</span></div>
+              </div>
+            </div>
+
+            <!-- Exploration Section -->
+            <div style="margin-bottom: 30px;">
+              <h3 style="color: #ffd700; margin-bottom: 15px; font-size: 1.3rem;">🗺️ Exploration</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div class="library-item"><span style="font-size: 1.5rem;">🗺️</span><br><span style="font-size: 0.8rem;">Map</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">⚓</span><br><span style="font-size: 0.8rem;">Anchors</span></div>
+                <div class="library-item"><span style="font-size: 1.5rem;">🚀</span><br><span style="font-size: 0.8rem;">Space Pirates</span></div>
               </div>
             </div>
           </div>
