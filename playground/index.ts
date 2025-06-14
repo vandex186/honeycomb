@@ -28,7 +28,7 @@ class VerticalHex extends defineHex({
 
 // Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
-let currentView = 'castle' // Changed default to castle
+let currentView = 'dungeon'
 let showCoordinates = false
 let showVisibility = false
 let currentLibraryContent: string | null = null
@@ -325,7 +325,13 @@ function updateAvatarContent(view: string) {
 }
 
 function updateNavButtonStates(activeView: string) {
-  // No nav buttons to update anymore
+  // Update navigation tab buttons
+  document.querySelectorAll('.nav-tab-button').forEach(btn => {
+    btn.classList.remove('active')
+    if ((btn as HTMLElement).dataset.view === activeView) {
+      btn.classList.add('active')
+    }
+  })
 }
 
 function showLibraryContent(contentKey: string) {
@@ -1013,6 +1019,8 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
 
 // Setup button functionality
 document.addEventListener('DOMContentLoaded', () => {
+  const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+  const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
   const burgerMenu = document.getElementById('burger-menu') as HTMLButtonElement
   const menuOverlay = document.getElementById('menu-overlay') as HTMLDivElement
   const closeMenu = document.getElementById('close-menu') as HTMLButtonElement
@@ -1062,6 +1070,9 @@ document.addEventListener('DOMContentLoaded', () => {
           showCoordinates = false
           showVisibility = false
           currentLibraryContent = null
+          // Reset button states
+          if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+          if (visibilityToggle) visibilityToggle.style.background = 'transparent'
           initializeGrid(view)
           closeMenuFunc()
         }
@@ -1071,7 +1082,87 @@ document.addEventListener('DOMContentLoaded', () => {
       item.addEventListener('touchend', handleMenuClick)
     })
   }
+  
+  if (coordinatesToggle) {
+    coordinatesToggle.addEventListener('click', () => {
+      showCoordinates = !showCoordinates
+      coordinatesToggle.style.background = showCoordinates ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
+      // Re-render the grid to show/hide terrain emojis
+      if (currentView === 'castle') {
+        renderGrid(currentView)
+      }
+    })
+  }
+
+  if (visibilityToggle) {
+    visibilityToggle.addEventListener('click', () => {
+      showVisibility = !showVisibility
+      visibilityToggle.style.background = showVisibility ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
+      // Re-render the grid to show/hide visibility overlays
+      if (currentView === 'castle') {
+        renderGrid(currentView)
+      }
+    })
+  }
 })
 
-// Initialize with castle view
-initializeGrid('castle')
+// Setup navigation for all buttons (nav-button, nav-circle, and nav-tab-button)
+document.addEventListener('click', (e) => {
+  const target = e.target as HTMLElement
+  
+  // Handle nav-button, nav-circle, and nav-tab-button clicks
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle') || target.classList.contains('nav-tab-button')) {
+    e.preventDefault()
+    const view = target.dataset.view
+    if (view) {
+      // Update active state for nav-buttons only
+      if (target.classList.contains('nav-button')) {
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
+        target.classList.add('active')
+      }
+      
+      currentView = view
+      // Reset states when switching views
+      showCoordinates = false
+      showVisibility = false
+      currentLibraryContent = null
+      // Reset button states
+      const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+      const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+      if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+      if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+      initializeGrid(view)
+    }
+  }
+})
+
+// Setup touch events for mobile
+document.addEventListener('touchend', (e) => {
+  const target = e.target as HTMLElement
+  
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle') || target.classList.contains('nav-tab-button')) {
+    e.preventDefault()
+    const view = target.dataset.view
+    if (view) {
+      // Update active state for nav-buttons only
+      if (target.classList.contains('nav-button')) {
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
+        target.classList.add('active')
+      }
+      
+      currentView = view
+      // Reset states when switching views
+      showCoordinates = false
+      showVisibility = false
+      currentLibraryContent = null
+      // Reset button states
+      const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+      const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+      if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+      if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+      initializeGrid(view)
+    }
+  }
+})
+
+initializeGrid('dungeon')

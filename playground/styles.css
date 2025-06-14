@@ -40,14 +40,15 @@ body {
   justify-content: center;
   width: 60px;
   height: 60px;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
 }
 
 .avatar-icon:active {
   background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.05);
 }
 
@@ -63,7 +64,7 @@ body {
   width: 44px;
   height: 44px;
   background: transparent;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -86,6 +87,7 @@ body {
 
 .burger-menu:active {
   background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
   transform: scale(0.95);
 }
 
@@ -151,7 +153,7 @@ body {
   width: 40px;
   height: 40px;
   background: transparent;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   color: white;
   font-size: 1.5rem;
@@ -167,6 +169,7 @@ body {
 
 .close-button:active {
   background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
   transform: scale(0.95);
 }
 
@@ -226,7 +229,7 @@ body {
   align-items: center;
   padding: 15px 10px;
   background: transparent;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -244,10 +247,12 @@ body {
 
 .menu-item[data-view] {
   background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .menu-item[data-view]:active {
   background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.5);
 }
 
 .menu-icon {
@@ -323,8 +328,8 @@ body {
 }
 
 .library-button {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   padding: 15px 10px;
   color: white;
@@ -342,6 +347,7 @@ body {
 
 .library-button:active {
   background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 215, 0, 0.5);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
@@ -386,8 +392,8 @@ body {
 }
 
 .back-button {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   color: white;
   padding: 10px 15px;
@@ -398,6 +404,7 @@ body {
 
 .back-button:active {
   background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 215, 0, 0.5);
 }
 
 .content-body {
