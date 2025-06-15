@@ -758,13 +758,25 @@ function getTerrainEmoji(terrain: any) {
   }
 }
 
-function getTerrainType(index: number, radialDistance?: number) {
-  // For castle view (formerly chart), use ring-based terrain assignment
-  if (radialDistance !== undefined) {
+function getTerrainType(index: number, radialDistance?: number, ringPosition?: number) {
+  // For castle view, use ring-based terrain assignment with specific positions
+  if (radialDistance !== undefined && ringPosition !== undefined) {
     switch (radialDistance) {
       case 0: return CASTLE        // Center - Castle
       case 1: return FIELDS        // Ring 1 - Fields around castle
-      case 2: return FOREST        // Ring 2 - Forest
+      case 2: 
+        // Ring 2 specific assignments
+        if ([1, 2, 3, 4].includes(ringPosition)) {
+          return FOREST  // 2/1, 2/2, 2/3, 2/4 - forest
+        } else if ([5, 6].includes(ringPosition)) {
+          return STEPPO  // 2/5, 2/6 - steppo
+        } else if ([7, 8, 9, 12].includes(ringPosition)) {
+          return FOREST  // 2/7, 2/8, 2/9, 2/12 - forest
+        } else if ([10, 11].includes(ringPosition)) {
+          return NORTH_FOREST  // 2/10, 2/11 - north forest
+        } else {
+          return FOREST  // Default for other positions in ring 2
+        }
       case 3: return NORTH_FOREST  // Ring 3 - North Forest (darker)
       case 4: return COAST         // Ring 4 - Coast
       case 5: return DEEP_BLUE     // Ring 5 - Deep Blue (outer ring)
@@ -864,7 +876,7 @@ function renderGrid(view: string) {
     
     // Add terrain background color for castle view
     if (view === 'castle') {
-      const terrainType = getTerrainType(index, customHex.radialDistance)
+      const terrainType = getTerrainType(index, customHex.radialDistance, customHex.ringPosition)
       const terrainColor = getTerrainColor(terrainType)
       polygon.style.fill = terrainColor
     } else {
@@ -911,7 +923,7 @@ function renderGrid(view: string) {
     // Add terrain emoji if coordinates are enabled and in castle view
     if (view === 'castle' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
       const terrainText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      const terrainType = getTerrainType(index, customHex.radialDistance)
+      const terrainType = getTerrainType(index, customHex.radialDistance, customHex.ringPosition)
       const emoji = getTerrainEmoji(terrainType)
       
       // Make castle emoji bigger
