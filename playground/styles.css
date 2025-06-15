@@ -15,7 +15,7 @@ body {
   left: 0;
   right: 0;
   height: 15vh;
-  background: rgba(0, 0, 0, 0.8);
+  background: transparent; /* Changed from rgba(0, 0, 0, 0.8) to transparent */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -64,7 +64,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent; /* Changed from rgba(255, 255, 255, 0.1) to transparent */
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   padding: 8px;
@@ -73,7 +73,7 @@ body {
 .nav-tab-button {
   width: 50px;
   height: 50px;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent; /* Changed from rgba(255, 255, 255, 0.1) to transparent */
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   color: white;
@@ -104,6 +104,7 @@ body {
   top: 15vh;
   right: 20px;
   display: flex;
+  flex-direction: column; /* Changed from row to column */
   align-items: center;
   gap: 10px;
   z-index: 1000;
@@ -832,10 +833,23 @@ body:not([data-view="dungeon"]) .bottom-area {
 .central-hex-text {
   pointer-events: none;
   z-index: 1001;
+  position: absolute;
+  display: flex;
+  align-items: flex-end; /* Align to bottom */
+  justify-content: center;
+  width: 60px;
+  height: 30px;
+  transform: translate(-50%, -50%);
 }
 
 .castle-icon-field {
+  font-size: 24px;
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: bold;
   animation: castlePulse 2s ease-in-out infinite;
+  line-height: 1;
+  margin-bottom: 5px; /* Add some margin from the bottom */
 }
 
 @keyframes castlePulse {

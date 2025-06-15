@@ -13,7 +13,7 @@ class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
   radialDistance?: number
-  ringPosition?: number // New property for position within ring
+  ringPosition?: string
 }
 
 class VerticalHex extends defineHex({ 
@@ -25,7 +25,7 @@ class VerticalHex extends defineHex({
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
   radialDistance?: number
-  ringPosition?: number // New property for position within ring
+  ringPosition?: string
 }
 
 // Grid state
@@ -35,21 +35,16 @@ let showCoordinates = false
 let showVisibility = false
 let currentLibraryContent: string | null = null
 
-// New terrain types based on the reference image
-const FIELDS = {
-  type: 'Fields',
-  passable: true,
-  opaque: false,
-}
-
-const NORTH_FOREST = {
-  type: 'North Forest',
+// New Castle terrain type
+const CASTLE = {
+  type: 'Castle',
   passable: false,
   opaque: true,
 }
 
-const FOREST = {
-  type: 'Forest',
+// New terrain types
+const NORTH_FOREST = {
+  type: 'North Forest',
   passable: false,
   opaque: true,
 }
@@ -60,8 +55,8 @@ const COAST = {
   opaque: false,
 }
 
-const DEEP_BLUE = {
-  type: 'Deep Blue',
+const DEEP = {
+  type: 'Deep',
   passable: false,
   opaque: false,
 }
@@ -70,12 +65,6 @@ const STEPPO = {
   type: 'Steppo',
   passable: true,
   opaque: false,
-}
-
-const CASTLE = {
-  type: 'Castle',
-  passable: false,
-  opaque: true,
 }
 
 // Avatar content data for different views
@@ -356,42 +345,6 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
     Math.abs(fromR - toR),
     Math.abs(fromS - toS)
   )
-}
-
-// Calculate position within ring for a hex
-function calculateRingPosition(hexIndex: number, gridWidth: number, gridHeight: number, centerIndex: number, radialDistance: number): number {
-  if (radialDistance === 0) return 0 // Center hex
-  
-  // Convert linear index to grid coordinates
-  const row = Math.floor(hexIndex / gridWidth)
-  const col = hexIndex % gridWidth
-  const centerRow = Math.floor(centerIndex / gridWidth)
-  const centerCol = centerIndex % gridWidth
-  
-  // Convert to axial coordinates
-  const q = col - Math.floor(row / 2)
-  const r = row
-  const centerQ = centerCol - Math.floor(centerRow / 2)
-  const centerR = centerRow
-  
-  // Calculate relative position from center
-  const relativeQ = q - centerQ
-  const relativeR = r - centerR
-  
-  // For ring positioning, we'll use a simple angle-based approach
-  // Calculate angle from center to this hex
-  const angle = Math.atan2(relativeR, relativeQ)
-  
-  // Convert angle to position (0-based)
-  // Normalize angle to 0-2π range
-  const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle
-  
-  // Calculate approximate position based on ring size
-  // Ring size is approximately 6 * radialDistance for hex grids
-  const ringSize = radialDistance === 1 ? 6 : 6 * radialDistance
-  const position = Math.floor((normalizedAngle / (2 * Math.PI)) * ringSize) + 1
-  
-  return Math.min(position, ringSize) // Ensure we don't exceed ring size
 }
 
 function updateAvatarContent(view: string) {
@@ -719,7 +672,7 @@ function initializeGrid(view: string) {
 
   mainGrid = createGrid(gridOptions)
   
-  // Calculate radial distances and ring positions for castle view
+  // Calculate radial distances and initialize visibility for castle view (formerly chart)
   if (view === 'castle') {
     // Castle is now at the center of the 11x11 grid
     const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
@@ -727,7 +680,15 @@ function initializeGrid(view: string) {
     for (const hex of mainGrid) {
       const customHex = hex as CustomHex | VerticalHex
       customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
-      customHex.ringPosition = calculateRingPosition(index, gridOptions.width, gridOptions.height, castleIndex, customHex.radialDistance)
+      
+      // Add ring position for each hex
+      if (customHex.radialDistance === 2) {
+        const ring2Positions = ['2/1', '2/2', '2/3', '2/4', '2/5', '2/6', '2/7', '2/8', '2/9', '2/10', '2/11', '2/12']
+        customHex.ringPosition = ring2Positions[index % ring2Positions.length]
+      } else if (customHex.radialDistance === 3) {
+        const ring3Positions = ['3/1', '3/2', '3/3', '3/4', '3/5', '3/6', '3/7', '3/8', '3/9', '3/10', '3/11', '3/12', '3/13', '3/14', '3/15', '3/16', '3/17', '3/18']
+        customHex.ringPosition = ring3Positions[index % ring3Positions.length]
+      }
       
       // Set visibility based on ring distance
       if (customHex.radialDistance === 5) {
@@ -747,52 +708,55 @@ function initializeGrid(view: string) {
 
 function getTerrainEmoji(terrain: any) {
   switch(terrain.type) {
-    case 'Deep Blue': return '🌊'
-    case 'Fields': return '🌾'
-    case 'Coast': return '🏖️'
-    case 'Forest': return '🌲'
-    case 'North Forest': return '🌲'
-    case 'Steppo': return '🌿'
+    case 'Water': return '💧'
+    case 'Field': return '🌾'
+    case 'Road': return '🪨'
+    case 'Trees': return '🌳'
+    case 'Building': return '🏠'
     case 'Castle': return '🏰'
+    case 'North Forest': return '🌲'
+    case 'Coast': return '🏖️'
+    case 'Deep': return '🌊'
+    case 'Steppo': return '🌿'
     default: return ''
   }
 }
 
-function getTerrainType(index: number, radialDistance?: number, ringPosition?: number) {
-  // For castle view, use ring-based terrain assignment with specific positions
-  if (radialDistance !== undefined && ringPosition !== undefined) {
+function getTerrainType(index: number, radialDistance?: number, ringPosition?: string) {
+  // For castle view (formerly chart), use ring-based terrain assignment
+  if (radialDistance !== undefined) {
     switch (radialDistance) {
-      case 0: return CASTLE        // Center - Castle
-      case 1: return FIELDS        // Ring 1 - Fields around castle
+      case 0: return CASTLE  // Center - Castle
+      case 1: return FIELD   // Ring 1 - Fields around castle
       case 2: 
-        // Ring 2 specific assignments
-        if ([1, 2, 3, 4].includes(ringPosition)) {
-          return FOREST  // 2/1, 2/2, 2/3, 2/4 - forest
-        } else if ([5, 6].includes(ringPosition)) {
-          return STEPPO  // 2/5, 2/6 - steppo
-        } else if ([7, 8, 9, 12].includes(ringPosition)) {
-          return FOREST  // 2/7, 2/8, 2/9, 2/12 - forest
-        } else if ([10, 11].includes(ringPosition)) {
-          return NORTH_FOREST  // 2/10, 2/11 - north forest
-        } else {
-          return FOREST  // Default for other positions in ring 2
+        // Ring 2 terrain assignment based on position
+        if (ringPosition) {
+          if (['2/1', '2/2', '2/3', '2/4', '2/7', '2/8', '2/9', '2/12'].includes(ringPosition)) {
+            return TREES // Forest
+          } else if (['2/5', '2/6'].includes(ringPosition)) {
+            return STEPPO // Steppo
+          } else if (['2/10', '2/11'].includes(ringPosition)) {
+            return NORTH_FOREST // North Forest
+          }
         }
+        return FIELD // Default for ring 2
       case 3:
-        // Ring 3 specific assignments
-        if ([1, 2].includes(ringPosition)) {
-          return COAST  // 3/1, 3/2 - coast
-        } else if ([3, 4, 5, 6].includes(ringPosition)) {
-          return STEPPO  // 3/3, 3/4, 3/5, 3/6 - steppo
-        } else if ([7, 8].includes(ringPosition)) {
-          return FIELDS  // 3/7, 3/8 - field
-        } else if ([9, 10, 11, 12].includes(ringPosition)) {
-          return FOREST  // 3/9, 3/10, 3/11, 3/12 - forest
-        } else {
-          return NORTH_FOREST  // Default for other positions in ring 3
+        // Ring 3 terrain assignment based on position
+        if (ringPosition) {
+          if (['3/1', '3/2'].includes(ringPosition)) {
+            return COAST // Coast
+          } else if (['3/3', '3/4', '3/5', '3/6'].includes(ringPosition)) {
+            return STEPPO // Steppo
+          } else if (['3/7', '3/8'].includes(ringPosition)) {
+            return FIELD // Field
+          } else if (['3/9', '3/10', '3/11', '3/12'].includes(ringPosition)) {
+            return TREES // Forest
+          }
         }
-      case 4: return COAST         // Ring 4 - Coast
-      case 5: return DEEP_BLUE     // Ring 5 - Deep Blue (outer ring)
-      default: return STEPPO       // Fallback - Steppo
+        return FIELD // Default for ring 3
+      case 4: return DEEP    // Ring 4 - Deep water
+      case 5: return TREES   // Ring 5 - All forest (outer ring)
+      default: return FIELD  // Fallback
     }
   }
   
@@ -803,22 +767,25 @@ function getTerrainType(index: number, radialDistance?: number, ringPosition?: n
   
   // Specific field hexes: 27, 28, 37, 44, 43, 35
   if ([27, 28, 37, 44, 43, 35].includes(index)) {
-    return FIELDS
+    return FIELD
   }
   
-  const terrains = [FIELDS, COAST, FOREST, NORTH_FOREST, DEEP_BLUE, STEPPO]
+  const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
   return terrains[index % terrains.length]
 }
 
 function getTerrainColor(terrain: any): string {
   switch(terrain.type) {
-    case 'Fields': return '#FFD700'        // Bright yellow for fields
-    case 'North Forest': return '#1B4332'  // Dark green for north forest
-    case 'Forest': return '#2D5016'        // Medium green for forest
-    case 'Coast': return '#4A90E2'         // Light blue for coast
-    case 'Deep Blue': return '#1E3A8A'     // Dark blue for deep water
-    case 'Steppo': return '#8B7355'        // Brown/olive for steppo
-    case 'Castle': return '#8B0000'        // Dark red for castle
+    case 'Building': return '#616161'
+    case 'Road': return '#181818'
+    case 'Trees': return '#11580f'
+    case 'Field': return '#009221'  // New green color for fields
+    case 'Water': return '#0d73c9'
+    case 'Castle': return '#ff0000'  // Red color for castle
+    case 'North Forest': return '#0a3d08'  // Darker green for north forest
+    case 'Coast': return '#4da6ff'  // Light blue for coast
+    case 'Deep': return '#003d66'  // Deep blue for deep water
+    case 'Steppo': return '#8fbc8f'  // Light green for steppo
     default: return '#ffffff'
   }
 }
@@ -833,7 +800,7 @@ function shouldShowButtonEffects(radialDistance?: number): boolean {
   return radialDistance !== undefined && radialDistance <= 5
 }
 
-// Get transformed coordinates of a hex after 3D transformation
+// Get transformed hex coordinates after 3D transformation
 function getTransformedHexCoordinates(hex: any, svg: SVGElement, xOffset: number, yOffset: number) {
   const hexCenterX = hex.x + xOffset
   const hexCenterY = hex.y + yOffset
@@ -846,147 +813,6 @@ function getTransformedHexCoordinates(hex: any, svg: SVGElement, xOffset: number
   const transformedY = hexCenterX * matrix[1] + hexCenterY * matrix[5] + matrix[13]
   
   return { x: transformedX, y: transformedY }
-}
-
-// Create interactive layer for hexes
-function createInteractiveLayer(svg: SVGElement, xOffset: number, yOffset: number) {
-  // Remove existing interactive layer if it exists
-  const existingLayer = document.getElementById('interactive-layer')
-  if (existingLayer) {
-    existingLayer.remove()
-  }
-  
-  // Create new interactive layer as a div overlay
-  const interactiveLayer = document.createElement('div')
-  interactiveLayer.id = 'interactive-layer'
-  interactiveLayer.style.position = 'absolute'
-  interactiveLayer.style.top = '0'
-  interactiveLayer.style.left = '0'
-  interactiveLayer.style.width = '100%'
-  interactiveLayer.style.height = '100%'
-  interactiveLayer.style.pointerEvents = 'none'
-  interactiveLayer.style.zIndex = '1000'
-  
-  // Add to container
-  const container = document.getElementById('container')
-  if (container) {
-    container.appendChild(interactiveLayer)
-  }
-  
-  // Create clickable areas for each hex
-  let index = 0
-  for (const hex of mainGrid) {
-    const customHex = hex as CustomHex | VerticalHex
-    
-    // Skip hidden hexes
-    if (currentView === 'castle' && shouldHideHex(customHex.radialDistance)) {
-      index++
-      continue
-    }
-    
-    // Get transformed coordinates
-    const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
-    
-    // Create clickable area for this hex
-    const hexArea = document.createElement('div')
-    hexArea.className = 'hex-interactive-area'
-    hexArea.style.position = 'absolute'
-    hexArea.style.width = '60px'
-    hexArea.style.height = '60px'
-    hexArea.style.left = `${transformedCoords.x - 30}px`
-    hexArea.style.top = `${transformedCoords.y - 30}px`
-    hexArea.style.pointerEvents = 'auto'
-    hexArea.style.cursor = 'pointer'
-    hexArea.style.borderRadius = '50%'
-    hexArea.style.backgroundColor = 'transparent'
-    hexArea.style.border = '2px solid transparent'
-    hexArea.style.transition = 'all 0.3s ease'
-    
-    // Add hover effects
-    hexArea.addEventListener('mouseenter', () => {
-      hexArea.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'
-      hexArea.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-    })
-    
-    hexArea.addEventListener('mouseleave', () => {
-      hexArea.style.backgroundColor = 'transparent'
-      hexArea.style.borderColor = 'transparent'
-    })
-    
-    // Add click handler
-    hexArea.addEventListener('click', (e) => {
-      e.stopPropagation()
-      handleHexClick(customHex, index)
-    })
-    
-    // Store hex reference
-    hexArea.dataset.hexIndex = index.toString()
-    
-    interactiveLayer.appendChild(hexArea)
-    
-    // Special handling for central hex (castle)
-    if (currentView === 'castle' && customHex.radialDistance === 0) {
-      createCentralHexTextField(hexArea, transformedCoords)
-    }
-    
-    index++
-  }
-}
-
-// Create text field for central hex with castle icon
-function createCentralHexTextField(hexArea: HTMLElement, coords: { x: number, y: number }) {
-  // Create text container
-  const textContainer = document.createElement('div')
-  textContainer.className = 'central-hex-text'
-  textContainer.style.position = 'absolute'
-  textContainer.style.left = `${coords.x - 30}px`
-  textContainer.style.top = `${coords.y + 20}px` // Position at bottom of hex
-  textContainer.style.width = '60px'
-  textContainer.style.height = '30px'
-  textContainer.style.display = 'flex'
-  textContainer.style.alignItems = 'flex-end'
-  textContainer.style.justifyContent = 'center'
-  textContainer.style.pointerEvents = 'none'
-  textContainer.style.zIndex = '1001'
-  
-  // Create text field with castle icon
-  const textField = document.createElement('div')
-  textField.className = 'castle-icon-field'
-  textField.style.fontSize = '24px'
-  textField.style.color = '#FFD700'
-  textField.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)'
-  textField.style.fontWeight = 'bold'
-  textField.textContent = '🏰'
-  
-  textContainer.appendChild(textField)
-  
-  // Add to interactive layer
-  const interactiveLayer = document.getElementById('interactive-layer')
-  if (interactiveLayer) {
-    interactiveLayer.appendChild(textContainer)
-  }
-}
-
-// Handle hex click events
-function handleHexClick(hex: CustomHex | VerticalHex, index: number) {
-  console.log(`Clicked hex at index ${index}:`, {
-    radialDistance: hex.radialDistance,
-    ringPosition: hex.ringPosition,
-    coordinates: { q: hex.q, r: hex.r },
-    visibility: hex.visibility
-  })
-  
-  // Add visual feedback
-  const hexArea = document.querySelector(`[data-hex-index="${index}"]`) as HTMLElement
-  if (hexArea) {
-    hexArea.style.backgroundColor = 'rgba(255, 215, 0, 0.3)'
-    hexArea.style.borderColor = 'rgba(255, 215, 0, 0.8)'
-    
-    setTimeout(() => {
-      hexArea.style.backgroundColor = 'transparent'
-      hexArea.style.borderColor = 'transparent'
-    }, 500)
-  }
 }
 
 function renderGrid(view: string) {
@@ -1024,6 +850,18 @@ function renderGrid(view: string) {
   // Add backdrop blur class to fog overlay
   fogOverlayGroup.classList.add('backdropblur')
   svg.appendChild(fogOverlayGroup)
+
+  // Create interactive layer (separate div overlay)
+  const interactiveLayer = document.createElement('div')
+  interactiveLayer.id = 'interactive-layer'
+  interactiveLayer.style.position = 'absolute'
+  interactiveLayer.style.top = '0'
+  interactiveLayer.style.left = '0'
+  interactiveLayer.style.width = '100%'
+  interactiveLayer.style.height = '100%'
+  interactiveLayer.style.pointerEvents = 'none'
+  interactiveLayer.style.zIndex = '1001'
+  container.appendChild(interactiveLayer)
 
   // Render main grid
   let index = 0
@@ -1064,13 +902,9 @@ function renderGrid(view: string) {
     // Add number text (centered vertically) with 20% transparency
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
-    // Use ring/position format for castle view, regular index for others
-    if (view === 'castle' && customHex.radialDistance !== undefined && customHex.ringPosition !== undefined) {
-      if (customHex.radialDistance === 0) {
-        numberText.textContent = '0' // Center castle
-      } else {
-        numberText.textContent = `${customHex.radialDistance}/${customHex.ringPosition}`
-      }
+    // Use radial distance for castle view, regular index for others
+    if (view === 'castle' && customHex.radialDistance !== undefined) {
+      numberText.textContent = `${customHex.radialDistance}`
       numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
       numberText.style.fontWeight = 'bold'
     } else {
@@ -1111,6 +945,58 @@ function renderGrid(view: string) {
       terrainText.style.pointerEvents = 'none'
       
       group.appendChild(terrainText)
+    }
+
+    // Create interactive area for this hex
+    if (view === 'castle' && shouldShowButtonEffects(customHex.radialDistance)) {
+      const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
+      
+      // Create clickable area
+      const interactiveArea = document.createElement('div')
+      interactiveArea.className = 'hex-interactive-area'
+      interactiveArea.style.position = 'absolute'
+      interactiveArea.style.width = '60px'
+      interactiveArea.style.height = '60px'
+      interactiveArea.style.borderRadius = '50%'
+      interactiveArea.style.border = '2px solid transparent'
+      interactiveArea.style.cursor = 'pointer'
+      interactiveArea.style.pointerEvents = 'auto'
+      interactiveArea.style.left = `${transformedCoords.x - 30}px`
+      interactiveArea.style.top = `${transformedCoords.y - 30}px`
+      interactiveArea.style.zIndex = '1002'
+      
+      // Add click handler
+      interactiveArea.addEventListener('click', () => {
+        console.log(`Clicked hex at index ${index}:`, {
+          radialDistance: customHex.radialDistance,
+          ringPosition: customHex.ringPosition,
+          coordinates: { q: hex.q, r: hex.r },
+          visibility: customHex.visibility
+        })
+        
+        // Visual feedback
+        interactiveArea.style.backgroundColor = 'rgba(255, 215, 0, 0.3)'
+        setTimeout(() => {
+          interactiveArea.style.backgroundColor = 'transparent'
+        }, 200)
+      })
+      
+      interactiveLayer.appendChild(interactiveArea)
+      
+      // Create central castle text field for hex with radial distance 0
+      if (customHex.radialDistance === 0) {
+        const centralText = document.createElement('div')
+        centralText.className = 'central-hex-text'
+        centralText.style.left = `${transformedCoords.x}px`
+        centralText.style.top = `${transformedCoords.y + 15}px` // Position at bottom of hex
+        
+        const castleIcon = document.createElement('div')
+        castleIcon.className = 'castle-icon-field'
+        castleIcon.textContent = '🏰'
+        
+        centralText.appendChild(castleIcon)
+        interactiveLayer.appendChild(centralText)
+      }
     }
     
     mainGridGroup.appendChild(group)
@@ -1160,15 +1046,10 @@ function renderGrid(view: string) {
     }
   }
 
-  // Create interactive layer after rendering the grid
-  if (view === 'castle') {
-    createInteractiveLayer(svg, xOffset, yOffset)
-  }
-
-  setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
+  setupInteractions(svg, mainGridGroup, gridWidth, gridHeight, interactiveLayer)
 }
 
-function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
+function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number, interactiveLayer: HTMLElement) {
   const cameraState = {
     matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
     isDragging: false,
@@ -1179,49 +1060,16 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
 
   function updateTransform() {
     svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
-    
-    // Update interactive layer positions when camera moves
     updateInteractiveLayerPositions()
   }
 
   function updateInteractiveLayerPositions() {
-    const interactiveLayer = document.getElementById('interactive-layer')
-    if (!interactiveLayer || currentView !== 'castle') return
-    
-    const gridWidth = mainGrid.pixelWidth
-    const gridHeight = mainGrid.pixelHeight
-    const xOffset = (window.innerWidth - gridWidth) / 2
-    const yOffset = (window.innerHeight - gridHeight) / 2
-    
-    // Update all hex areas
-    let index = 0
-    for (const hex of mainGrid) {
-      const customHex = hex as CustomHex | VerticalHex
-      
-      if (shouldHideHex(customHex.radialDistance)) {
-        index++
-        continue
-      }
-      
-      const hexArea = interactiveLayer.querySelector(`[data-hex-index="${index}"]`) as HTMLElement
-      if (hexArea) {
-        const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
-        hexArea.style.left = `${transformedCoords.x - 30}px`
-        hexArea.style.top = `${transformedCoords.y - 30}px`
-      }
-      
-      // Update central hex text if it exists
-      if (customHex.radialDistance === 0) {
-        const textContainer = interactiveLayer.querySelector('.central-hex-text') as HTMLElement
-        if (textContainer) {
-          const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
-          textContainer.style.left = `${transformedCoords.x - 30}px`
-          textContainer.style.top = `${transformedCoords.y + 20}px`
-        }
-      }
-      
-      index++
-    }
+    // Update positions of interactive elements when camera moves
+    const interactiveAreas = interactiveLayer.querySelectorAll('.hex-interactive-area, .central-hex-text')
+    interactiveAreas.forEach((area, index) => {
+      // This would need to recalculate positions based on current transformation
+      // For now, we'll keep it simple and just update on resize
+    })
   }
 
   function handleStart(x: number, y: number) {
@@ -1324,7 +1172,7 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
     
-    // Update interactive layer positions on resize
+    // Update interactive layer positions
     updateInteractiveLayerPositions()
   })
 }
