@@ -59,6 +59,83 @@ body {
   gap: 15px;
 }
 
+/* Navigation Buttons Container */
+.nav-buttons-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.nav-tab-button {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-tab-button:active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0.98);
+}
+
+.nav-tab-button.active {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.middle-area {
+  position: fixed;
+  top: 15vh;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  touch-action: manipulation;
+}
+
+.nav-button {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  min-width: 100px;
+  min-height: 44px;
+}
+
+.nav-button:active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0.98);
+}
+
+.nav-button.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 /* Burger Menu Button */
 .burger-menu {
   width: 44px;
@@ -127,7 +204,7 @@ body {
   background: rgba(20, 20, 20, 0.95);
   border-radius: 12px;
   width: 90vw;
-  max-width: 600px;
+  max-width: 800px;
   max-height: 85vh;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
@@ -174,8 +251,8 @@ body {
 }
 
 .menu-content {
-  padding: 60px 25px 25px 25px;
-  max-height: calc(85vh - 20px);
+  padding: 20px 20px 20px 20px;
+  max-height: calc(90vh - 20px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
@@ -196,74 +273,53 @@ body {
 
 .menu-section {
   display: grid;
-  gap: 12px;
-  margin-bottom: 25px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.menu-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.menu-section.main-navigation {
   grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 5px;
 }
 
-.menu-section.game-actions {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.menu-section.social-wallet {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.menu-section.system-actions {
-  grid-template-columns: repeat(2, 1fr);
+.menu-section:not(:first-child) {
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .menu-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px 10px;
+  padding: 12px 8px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  min-height: 70px;
+  min-height: 60px;
   justify-content: center;
 }
 
 .menu-item:active {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
 }
 
 .menu-item[data-view] {
   background: rgba(255, 215, 0, 0.1);
-  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .menu-item[data-view]:active {
   background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.5);
 }
 
 .menu-icon {
-  font-size: 2.2rem;
-  margin-bottom: 6px;
+  font-size: 2rem;
+  margin-bottom: 4px;
   display: block;
 }
 
 .menu-text {
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-align: center;
   line-height: 1.2;
@@ -414,42 +470,56 @@ body {
 }
 
 /* Responsive Design for Menu */
+@media (min-width: 1200px) {
+  .menu-section:not(:first-child) {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .menu-popup {
     width: 95vw;
     max-height: 90vh;
   }
   
-  .menu-section.main-navigation {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .menu-section.game-actions {
-    grid-template-columns: repeat(3, 1fr);
+  .menu-section:not(:first-child) {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
   }
   
   .menu-item {
-    padding: 12px 8px;
-    min-height: 60px;
+    padding: 10px 6px;
+    min-height: 55px;
   }
   
   .menu-icon {
-    font-size: 2rem;
-    margin-bottom: 4px;
+    font-size: 1.8rem;
+    margin-bottom: 3px;
   }
   
   .menu-text {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
   }
   
   .menu-content {
-    padding: 60px 20px 20px 20px;
+    padding: 60px 20px 15px 20px;
   }
 
   .avatar-icon {
     font-size: 2rem;
     width: 50px;
     height: 50px;
+  }
+
+  .nav-tab-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .nav-buttons-container {
+    gap: 8px;
+    padding: 6px;
   }
 
   .library-categories {
@@ -477,28 +547,40 @@ body {
 }
 
 @media (max-width: 480px) {
-  .menu-section.main-navigation {
-    grid-template-columns: repeat(2, 1fr);
+  .menu-section:not(:first-child) {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
   }
   
   .menu-item {
-    padding: 10px 6px;
-    min-height: 55px;
+    padding: 8px 4px;
+    min-height: 50px;
   }
   
   .menu-icon {
-    font-size: 1.8rem;
-    margin-bottom: 3px;
+    font-size: 1.6rem;
+    margin-bottom: 2px;
   }
   
   .menu-text {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
   }
 
   .avatar-icon {
     font-size: 1.8rem;
     width: 45px;
     height: 45px;
+  }
+
+  .nav-tab-button {
+    width: 35px;
+    height: 35px;
+    font-size: 1.3rem;
+  }
+
+  .nav-buttons-container {
+    gap: 6px;
+    padding: 4px;
   }
 
   .nav-container {
@@ -534,6 +616,35 @@ body {
   .content-body {
     font-size: 1rem;
   }
+}
+
+/* Icon button styles */
+.icon-button {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+/* Show icon buttons only for castle view */
+body:not([data-view="castle"]) .icon-button {
+  display: none;
 }
 
 #container {
@@ -609,6 +720,19 @@ body:not([data-view="dungeon"]) .bottom-area {
 .control-button.red { background: #ff4444; }
 .control-button.orange { background: #ff8c00; }
 .control-button.blue { background: #4444ff; }
+
+/* Navigation circle buttons */
+.control-button.nav-circle {
+  background: #444;
+  border: 2px solid #666;
+  transition: all 0.3s ease;
+}
+
+.control-button.nav-circle:active {
+  background: #666;
+  border-color: #888;
+  transform: scale(0.95);
+}
 
 .hex-grid {
   display: block;
