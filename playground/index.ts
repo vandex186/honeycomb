@@ -33,7 +33,43 @@ let showCoordinates = false
 let showVisibility = false
 let currentLibraryContent: string | null = null
 
-// New Castle terrain type
+// New terrain types based on the reference image
+const FIELDS = {
+  type: 'Fields',
+  passable: true,
+  opaque: false,
+}
+
+const NORTH_FOREST = {
+  type: 'North Forest',
+  passable: false,
+  opaque: true,
+}
+
+const FOREST = {
+  type: 'Forest',
+  passable: false,
+  opaque: true,
+}
+
+const COAST = {
+  type: 'Coast',
+  passable: true,
+  opaque: false,
+}
+
+const DEEP_BLUE = {
+  type: 'Deep Blue',
+  passable: false,
+  opaque: false,
+}
+
+const STEPPO = {
+  type: 'Steppo',
+  passable: true,
+  opaque: false,
+}
+
 const CASTLE = {
   type: 'Castle',
   passable: false,
@@ -672,11 +708,12 @@ function initializeGrid(view: string) {
 
 function getTerrainEmoji(terrain: any) {
   switch(terrain.type) {
-    case 'Water': return '💧'
-    case 'Field': return '🌾'
-    case 'Road': return '🪨'
-    case 'Trees': return '🌳'
-    case 'Building': return '🏠'
+    case 'Deep Blue': return '🌊'
+    case 'Fields': return '🌾'
+    case 'Coast': return '🏖️'
+    case 'Forest': return '🌲'
+    case 'North Forest': return '🌲'
+    case 'Steppo': return '🌿'
     case 'Castle': return '🏰'
     default: return ''
   }
@@ -686,13 +723,13 @@ function getTerrainType(index: number, radialDistance?: number) {
   // For castle view (formerly chart), use ring-based terrain assignment
   if (radialDistance !== undefined) {
     switch (radialDistance) {
-      case 0: return CASTLE  // Center - Castle
-      case 1: return FIELD   // Ring 1 - Fields around castle
-      case 2: return FIELD   // Ring 2 - All fields
-      case 3: return TREES   // Ring 3 - All forest
-      case 4: return WATER   // Ring 4 - All water
-      case 5: return TREES   // Ring 5 - All forest (outer ring)
-      default: return FIELD  // Fallback
+      case 0: return CASTLE        // Center - Castle
+      case 1: return FIELDS        // Ring 1 - Fields around castle
+      case 2: return FOREST        // Ring 2 - Forest
+      case 3: return NORTH_FOREST  // Ring 3 - North Forest (darker)
+      case 4: return COAST         // Ring 4 - Coast
+      case 5: return DEEP_BLUE     // Ring 5 - Deep Blue (outer ring)
+      default: return STEPPO       // Fallback - Steppo
     }
   }
   
@@ -703,21 +740,22 @@ function getTerrainType(index: number, radialDistance?: number) {
   
   // Specific field hexes: 27, 28, 37, 44, 43, 35
   if ([27, 28, 37, 44, 43, 35].includes(index)) {
-    return FIELD
+    return FIELDS
   }
   
-  const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
+  const terrains = [FIELDS, COAST, FOREST, NORTH_FOREST, DEEP_BLUE, STEPPO]
   return terrains[index % terrains.length]
 }
 
 function getTerrainColor(terrain: any): string {
   switch(terrain.type) {
-    case 'Building': return '#616161'
-    case 'Road': return '#181818'
-    case 'Trees': return '#11580f'
-    case 'Field': return '#009221'  // New green color for fields
-    case 'Water': return '#0d73c9'
-    case 'Castle': return '#ff0000'  // Red color for castle
+    case 'Fields': return '#FFD700'        // Bright yellow for fields
+    case 'North Forest': return '#1B4332'  // Dark green for north forest
+    case 'Forest': return '#2D5016'        // Medium green for forest
+    case 'Coast': return '#4A90E2'         // Light blue for coast
+    case 'Deep Blue': return '#1E3A8A'     // Dark blue for deep water
+    case 'Steppo': return '#8B7355'        // Brown/olive for steppo
+    case 'Castle': return '#8B0000'        // Dark red for castle
     default: return '#ffffff'
   }
 }
