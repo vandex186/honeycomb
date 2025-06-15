@@ -356,27 +356,6 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
   )
 }
 
-// Calculate hex count for each ring
-function getHexCountForRing(ring: number): number {
-  if (ring === 0) return 1 // Center castle
-  return ring * 6 // Each ring has 6 * ring hexes
-}
-
-// Get current hex position in ring
-function getHexPositionInRing(hexIndex: number, ring: number, gridWidth: number): number {
-  if (ring === 0) return 1 // Castle is always 1/1
-  
-  // Count hexes in this ring that come before this hex
-  let position = 1
-  for (let i = 0; i < hexIndex; i++) {
-    const testDistance = calculateRadialDistance(i, Math.floor((gridWidth * gridWidth) / 2), gridWidth)
-    if (testDistance === ring) {
-      position++
-    }
-  }
-  return position
-}
-
 function updateAvatarContent(view: string) {
   // Avatar is now just a circle, no additional content needed
 }
@@ -810,15 +789,6 @@ function renderGrid(view: string) {
   svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   svg.classList.add('hex-grid')
   svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
-  
-  // Add background image for castle view
-  if (view === 'castle') {
-    svg.style.backgroundImage = 'url(/public/bgr.jpg)'
-    svg.style.backgroundSize = 'cover'
-    svg.style.backgroundPosition = 'center'
-    svg.style.backgroundRepeat = 'no-repeat'
-  }
-  
   container.appendChild(svg)
 
   // Main grid group (with 3D transformation)
@@ -872,40 +842,28 @@ function renderGrid(view: string) {
     
     group.appendChild(polygon)
     
-    // Add ring information text for castle view
+    // Add number text (centered vertically) with 20% transparency
+    const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    
+    // Use radial distance for castle view, regular index for others
     if (view === 'castle' && customHex.radialDistance !== undefined) {
-      const ringText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      const ring = customHex.radialDistance
-      const totalInRing = getHexCountForRing(ring)
-      const positionInRing = getHexPositionInRing(index, ring, 11)
-      
-      ringText.textContent = `${positionInRing}/${totalInRing}`
-      ringText.style.fill = 'rgba(255, 255, 255, 0.9)'
-      ringText.style.fontWeight = 'bold'
-      ringText.setAttribute('x', hex.x.toString())
-      ringText.setAttribute('y', hex.y.toString())
-      ringText.setAttribute('text-anchor', 'middle')
-      ringText.setAttribute('dominant-baseline', 'central')
-      ringText.style.fontSize = '0.7rem'
-      ringText.style.userSelect = 'none'
-      ringText.style.pointerEvents = 'none'
-      
-      group.appendChild(ringText)
+      numberText.textContent = `${customHex.radialDistance}`
+      numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
+      numberText.style.fontWeight = 'bold'
     } else {
-      // Add number text for other views
-      const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       numberText.textContent = `${index}`
-      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'
-      numberText.setAttribute('x', hex.x.toString())
-      numberText.setAttribute('y', hex.y.toString())
-      numberText.setAttribute('text-anchor', 'middle')
-      numberText.setAttribute('dominant-baseline', 'central')
-      numberText.style.fontSize = '0.8rem'
-      numberText.style.userSelect = 'none'
-      numberText.style.pointerEvents = 'none'
-      
-      group.appendChild(numberText)
+      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'  // White with 20% transparency
     }
+    
+    numberText.setAttribute('x', hex.x.toString())
+    numberText.setAttribute('y', hex.y.toString()) // Centered vertically
+    numberText.setAttribute('text-anchor', 'middle')
+    numberText.setAttribute('dominant-baseline', 'central')
+    numberText.style.fontSize = '0.8rem' // Smaller font size
+    numberText.style.userSelect = 'none'
+    numberText.style.pointerEvents = 'none'
+    
+    group.appendChild(numberText)
     
     // Add terrain emoji if coordinates are enabled and in castle view
     if (view === 'castle' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {

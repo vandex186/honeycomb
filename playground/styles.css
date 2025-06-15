@@ -817,18 +817,3 @@ body:not([data-view="dungeon"]) .bottom-area {
   user-select: none !important;
   pointer-events: none !important;
 }
-
-/* Castle view background image */
-body[data-view="castle"] #container {
-  background-image: url('/public/bgr.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-/* Castle hex grid with background */
-body[data-view="castle"] .hex-grid {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(2px);
-}
