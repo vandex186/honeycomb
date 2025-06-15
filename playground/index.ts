@@ -842,28 +842,43 @@ function renderGrid(view: string) {
     
     group.appendChild(polygon)
     
-    // Add number text (centered vertically) with 20% transparency
+    // Add hex number in a circle (always visible)
+    const circleGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+    
+    // Create circle background
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    circle.setAttribute('cx', hex.x.toString())
+    circle.setAttribute('cy', hex.y.toString())
+    circle.setAttribute('r', '12') // Circle radius
+    circle.style.fill = 'rgba(0, 0, 0, 0.7)' // Semi-transparent black background
+    circle.style.stroke = 'rgba(255, 255, 255, 0.8)' // White border
+    circle.style.strokeWidth = '1'
+    circleGroup.appendChild(circle)
+    
+    // Add number text inside circle
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
     // Use radial distance for castle view, regular index for others
     if (view === 'castle' && customHex.radialDistance !== undefined) {
       numberText.textContent = `${customHex.radialDistance}`
-      numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
+      numberText.style.fill = 'rgba(255, 255, 255, 1)'  // White text
       numberText.style.fontWeight = 'bold'
     } else {
       numberText.textContent = `${index}`
-      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'  // White with 20% transparency
+      numberText.style.fill = 'rgba(255, 255, 255, 1)'  // White text
     }
     
     numberText.setAttribute('x', hex.x.toString())
-    numberText.setAttribute('y', hex.y.toString()) // Centered vertically
+    numberText.setAttribute('y', hex.y.toString())
     numberText.setAttribute('text-anchor', 'middle')
     numberText.setAttribute('dominant-baseline', 'central')
-    numberText.style.fontSize = '0.8rem' // Smaller font size
+    numberText.style.fontSize = '0.7rem' // Smaller font to fit in circle
     numberText.style.userSelect = 'none'
     numberText.style.pointerEvents = 'none'
+    numberText.style.fontWeight = 'bold'
     
-    group.appendChild(numberText)
+    circleGroup.appendChild(numberText)
+    group.appendChild(circleGroup)
     
     // Add terrain emoji if coordinates are enabled and in castle view
     if (view === 'castle' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
@@ -881,7 +896,7 @@ function renderGrid(view: string) {
       }
       
       terrainText.setAttribute('x', hex.x.toString())
-      terrainText.setAttribute('y', (hex.y + 15).toString()) // Offset down more
+      terrainText.setAttribute('y', (hex.y + 20).toString()) // Offset down more to avoid circle
       terrainText.setAttribute('text-anchor', 'middle')
       terrainText.setAttribute('dominant-baseline', 'central')
       terrainText.style.userSelect = 'none'
