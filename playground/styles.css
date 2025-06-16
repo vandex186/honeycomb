@@ -46,7 +46,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.avatar-icon:active {
+.avatar-icon:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.05);
@@ -88,6 +88,12 @@ body {
   justify-content: center;
 }
 
+.nav-tab-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
 .nav-tab-button:active {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(0.98);
@@ -126,6 +132,10 @@ body {
   min-height: 44px;
 }
 
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .nav-button:active {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(0.98);
@@ -162,9 +172,12 @@ body {
   border-radius: 1px;
 }
 
-.burger-menu:active {
+.burger-menu:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+.burger-menu:active {
   transform: scale(0.95);
 }
 
@@ -244,14 +257,17 @@ body {
   z-index: 2001;
 }
 
-.close-button:active {
+.close-button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+.close-button:active {
   transform: scale(0.95);
 }
 
 .menu-content {
-  padding: 20px 20px 20px 20px;
+  padding: 60px 25px 20px 25px;
   max-height: calc(90vh - 20px);
   overflow-y: auto;
   scrollbar-width: thin;
@@ -273,7 +289,7 @@ body {
 
 .menu-section {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 5px;
 }
@@ -298,16 +314,20 @@ body {
   justify-content: center;
 }
 
-.menu-item:active {
+.menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
+}
+
+.menu-item:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .menu-item[data-view] {
   background: rgba(255, 215, 0, 0.1);
 }
 
-.menu-item[data-view]:active {
+.menu-item[data-view]:hover {
   background: rgba(255, 215, 0, 0.2);
 }
 
@@ -401,11 +421,15 @@ body {
   justify-content: center;
 }
 
-.library-button:active {
+.library-button:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 215, 0, 0.5);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+}
+
+.library-button:active {
+  transform: translateY(0);
 }
 
 .library-button-icon {
@@ -458,7 +482,7 @@ body {
   font-size: 1rem;
 }
 
-.back-button:active {
+.back-button:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 215, 0, 0.5);
 }
@@ -637,9 +661,13 @@ body {
   justify-content: center;
 }
 
-.icon-button:active {
+.icon-button:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
+}
+
+.icon-button:active {
+  transform: scale(0.95);
 }
 
 /* Show icon buttons only for castle view */
@@ -728,9 +756,13 @@ body:not([data-view="dungeon"]) .bottom-area {
   transition: all 0.3s ease;
 }
 
-.control-button.nav-circle:active {
+.control-button.nav-circle:hover {
   background: #666;
   border-color: #888;
+  transform: scale(1.05);
+}
+
+.control-button.nav-circle:active {
   transform: scale(0.95);
 }
 
