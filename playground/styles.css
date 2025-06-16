@@ -369,6 +369,7 @@ body {
 
 .library-subtitle {
   font-size: 1.2rem;
+  text-align: left;
   opacity: 0.8;
   margin-bottom: 20px;
 }
