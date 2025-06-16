@@ -135,7 +135,7 @@ function createInteractiveLayer() {
       .addClass('central-hex-text')
     
     // Add HTML content to text container with proper namespace
-    textContainer.add(`
+    textContainer.html(`
       <div xmlns="http://www.w3.org/1999/xhtml" style="
         width: 60px; 
         height: 30px; 
