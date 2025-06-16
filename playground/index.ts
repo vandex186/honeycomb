@@ -34,7 +34,6 @@ let mainGrid: Grid<CustomHex | VerticalHex>
 
 // Camera state for 3D transformations
 const cameraState = {
-  matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
   isDragging: false,
   lastX: 0,
   lastY: 0,
@@ -42,7 +41,34 @@ const cameraState = {
   rotationY: 0,
   scale: 1,
   translateX: 0,
-  translateY: 0
+  translateY: 0,
+  matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+}
+
+// Update camera matrix based on current state
+function updateCameraMatrix() {
+  if (currentView === 'castle') {
+    // 3D transformation matrix for castle view
+    const cosX = Math.cos(cameraState.rotationX)
+    const sinX = Math.sin(cameraState.rotationX)
+    const cosY = Math.cos(cameraState.rotationY)
+    const sinY = Math.sin(cameraState.rotationY)
+
+    cameraState.matrix = [
+      cosY * cameraState.scale, sinX * sinY * cameraState.scale, -cosX * sinY * cameraState.scale, 0,
+      0, cosX * cameraState.scale, sinX * cameraState.scale, -0.002,
+      sinY * cameraState.scale, -sinX * cosY * cameraState.scale, cosX * cosY * cameraState.scale, 0,
+      cameraState.translateX, cameraState.translateY, 0, 1
+    ]
+  } else {
+    // 2D transformation matrix for other views
+    cameraState.matrix = [
+      cameraState.scale, 0, 0, 0,
+      0, cameraState.scale, 0, 0,
+      0, 0, 1, 0,
+      cameraState.translateX, cameraState.translateY, 0, 1
+    ]
+  }
 }
 
 // Initialize the application
@@ -137,6 +163,13 @@ function switchView(view: string) {
   document.querySelectorAll(`[data-view="${view}"]`).forEach(button => {
     button.classList.add('active')
   })
+
+  // Reset camera state when switching views
+  cameraState.rotationX = 0
+  cameraState.rotationY = 0
+  cameraState.scale = 1
+  cameraState.translateX = 0
+  cameraState.translateY = 0
 
   createGrid()
   renderGrid(view)
@@ -322,13 +355,9 @@ function renderGrid(view: string) {
   const xOffset = (window.innerWidth - gridWidth) / 2
   const yOffset = (window.innerHeight - gridHeight) / 2
 
-  // Apply 3D transformation for castle view
-  if (view === 'castle') {
-    svg.style.transformStyle = 'preserve-3d'
-    svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
-  } else {
-    svg.style.transform = 'none'
-  }
+  // Apply transformation
+  updateCameraMatrix()
+  svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
 
   let index = 0
   for (const hex of mainGrid) {
@@ -430,6 +459,7 @@ function renderGrid(view: string) {
 
 function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: number, gridHeight: number) {
   function updateTransform() {
+    updateCameraMatrix()
     svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
   }
 
@@ -452,30 +482,14 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: nu
 
       // Limit rotation
       cameraState.rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 6, cameraState.rotationX))
-
-      // Update 3D matrix
-      const cosX = Math.cos(cameraState.rotationX)
-      const sinX = Math.sin(cameraState.rotationX)
-      const cosY = Math.cos(cameraState.rotationY)
-      const sinY = Math.sin(cameraState.rotationY)
-
-      cameraState.matrix = [
-        cosY, sinX * sinY, -cosX * sinY, 0,
-        0, cosX, sinX, 0,
-        sinY, -sinX * cosY, cosX * cosY, 0,
-        cameraState.translateX, cameraState.translateY, 0, 1
-      ]
+      
+      // Also update translation for panning
+      cameraState.translateX += deltaX * 0.5
+      cameraState.translateY += deltaY * 0.5
     } else {
       // 2D panning for other views
       cameraState.translateX += deltaX
       cameraState.translateY += deltaY
-      
-      cameraState.matrix = [
-        cameraState.scale, 0, 0, 0,
-        0, cameraState.scale, 0, 0,
-        0, 0, 1, 0,
-        cameraState.translateX, cameraState.translateY, 0, 1
-      ]
     }
 
     updateTransform()
@@ -494,15 +508,7 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: nu
     const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
     cameraState.scale = Math.max(0.1, Math.min(3, cameraState.scale * scaleFactor))
     
-    if (currentView !== 'castle') {
-      cameraState.matrix = [
-        cameraState.scale, 0, 0, 0,
-        0, cameraState.scale, 0, 0,
-        0, 0, 1, 0,
-        cameraState.translateX, cameraState.translateY, 0, 1
-      ]
-      updateTransform()
-    }
+    updateTransform()
   }
 
   // Mouse events
