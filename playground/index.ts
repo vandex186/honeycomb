@@ -367,7 +367,6 @@ function showLibraryMain() {
   container.innerHTML = `
     <div class="library-container">
       <div class="library-header">
-        <div style="font-size: 4rem; margin-bottom: 10px;">📚</div>
         <h1 class="library-title">Library of Knowledge</h1>
         <p class="library-subtitle">Explore the vast collection of wisdom and information</p>
       </div>
