@@ -15,12 +15,12 @@ body {
   left: 0;
   right: 0;
   height: 15vh;
-  background: rgba(0, 0, 0, 0.8);
+  background: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: none;
   z-index: 1000;
   touch-action: manipulation;
   padding: 0 20px;
