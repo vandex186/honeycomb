@@ -833,162 +833,6 @@ function shouldShowButtonEffects(radialDistance?: number): boolean {
   return radialDistance !== undefined && radialDistance <= 5
 }
 
-// Get transformed coordinates of a hex after 3D transformation
-function getTransformedHexCoordinates(hex: any, svg: SVGElement, xOffset: number, yOffset: number) {
-  const hexCenterX = hex.x + xOffset
-  const hexCenterY = hex.y + yOffset
-  
-  // Apply the same 3D transformation matrix as the SVG
-  const matrix = [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1]
-  
-  // Transform the coordinates
-  const transformedX = hexCenterX * matrix[0] + hexCenterY * matrix[4] + matrix[12]
-  const transformedY = hexCenterX * matrix[1] + hexCenterY * matrix[5] + matrix[13]
-  
-  return { x: transformedX, y: transformedY }
-}
-
-// Create interactive layer for hexes
-function createInteractiveLayer(svg: SVGElement, xOffset: number, yOffset: number) {
-  // Remove existing interactive layer if it exists
-  const existingLayer = document.getElementById('interactive-layer')
-  if (existingLayer) {
-    existingLayer.remove()
-  }
-  
-  // Create new interactive layer as a div overlay
-  const interactiveLayer = document.createElement('div')
-  interactiveLayer.id = 'interactive-layer'
-  interactiveLayer.style.position = 'absolute'
-  interactiveLayer.style.top = '0'
-  interactiveLayer.style.left = '0'
-  interactiveLayer.style.width = '100%'
-  interactiveLayer.style.height = '100%'
-  interactiveLayer.style.pointerEvents = 'none'
-  interactiveLayer.style.zIndex = '1000'
-  
-  // Add to container
-  const container = document.getElementById('container')
-  if (container) {
-    container.appendChild(interactiveLayer)
-  }
-  
-  // Create clickable areas for each hex
-  let index = 0
-  for (const hex of mainGrid) {
-    const customHex = hex as CustomHex | VerticalHex
-    
-    // Skip hidden hexes
-    if (currentView === 'castle' && shouldHideHex(customHex.radialDistance)) {
-      index++
-      continue
-    }
-    
-    // Get transformed coordinates
-    const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
-    
-    // Create clickable area for this hex
-    const hexArea = document.createElement('div')
-    hexArea.className = 'hex-interactive-area'
-    hexArea.style.position = 'absolute'
-    hexArea.style.width = '60px'
-    hexArea.style.height = '60px'
-    hexArea.style.left = `${transformedCoords.x - 30}px`
-    hexArea.style.top = `${transformedCoords.y - 30}px`
-    hexArea.style.pointerEvents = 'auto'
-    hexArea.style.cursor = 'pointer'
-    hexArea.style.borderRadius = '50%'
-    hexArea.style.backgroundColor = 'transparent'
-    hexArea.style.border = '2px solid transparent'
-    hexArea.style.transition = 'all 0.3s ease'
-    
-    // Add hover effects
-    hexArea.addEventListener('mouseenter', () => {
-      hexArea.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'
-      hexArea.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-    })
-    
-    hexArea.addEventListener('mouseleave', () => {
-      hexArea.style.backgroundColor = 'transparent'
-      hexArea.style.borderColor = 'transparent'
-    })
-    
-    // Add click handler
-    hexArea.addEventListener('click', (e) => {
-      e.stopPropagation()
-      handleHexClick(customHex, index)
-    })
-    
-    // Store hex reference
-    hexArea.dataset.hexIndex = index.toString()
-    
-    interactiveLayer.appendChild(hexArea)
-    
-    // Special handling for central hex (castle)
-    if (currentView === 'castle' && customHex.radialDistance === 0) {
-      createCentralHexTextField(hexArea, transformedCoords)
-    }
-    
-    index++
-  }
-}
-
-// Create text field for central hex with castle icon
-function createCentralHexTextField(hexArea: HTMLElement, coords: { x: number, y: number }) {
-  // Create text container
-  const textContainer = document.createElement('div')
-  textContainer.className = 'central-hex-text'
-  textContainer.style.position = 'absolute'
-  textContainer.style.left = `${coords.x - 30}px`
-  textContainer.style.top = `${coords.y + 20}px` // Position at bottom of hex
-  textContainer.style.width = '60px'
-  textContainer.style.height = '30px'
-  textContainer.style.display = 'flex'
-  textContainer.style.alignItems = 'flex-end'
-  textContainer.style.justifyContent = 'center'
-  textContainer.style.pointerEvents = 'none'
-  textContainer.style.zIndex = '1001'
-  
-  // Create text field with castle icon
-  const textField = document.createElement('div')
-  textField.className = 'castle-icon-field'
-  textField.style.fontSize = '24px'
-  textField.style.color = '#FFD700'
-  textField.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)'
-  textField.style.fontWeight = 'bold'
-  textField.textContent = '🏰'
-  
-  textContainer.appendChild(textField)
-  
-  // Add to interactive layer
-  const interactiveLayer = document.getElementById('interactive-layer')
-  if (interactiveLayer) {
-    interactiveLayer.appendChild(textContainer)
-  }
-}
-
-// Handle hex click events
-function handleHexClick(hex: CustomHex | VerticalHex, index: number) {
-  console.log(`Clicked hex at index ${index}:`, {
-    radialDistance: hex.radialDistance,
-    ringPosition: hex.ringPosition,
-    coordinates: { q: hex.q, r: hex.r },
-    visibility: hex.visibility
-  })
-  
-  // Add visual feedback
-  const hexArea = document.querySelector(`[data-hex-index="${index}"]`) as HTMLElement
-  if (hexArea) {
-    hexArea.style.backgroundColor = 'rgba(255, 215, 0, 0.3)'
-    hexArea.style.borderColor = 'rgba(255, 215, 0, 0.8)'
-    
-    setTimeout(() => {
-      hexArea.style.backgroundColor = 'transparent'
-      hexArea.style.borderColor = 'transparent'
-    }, 500)
-  }
-}
-
 function renderGrid(view: string) {
   const container = document.getElementById('container')
   if (!container) return
@@ -1160,11 +1004,6 @@ function renderGrid(view: string) {
     }
   }
 
-  // Create interactive layer after rendering the grid
-  if (view === 'castle') {
-    createInteractiveLayer(svg, xOffset, yOffset)
-  }
-
   setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
 }
 
@@ -1179,49 +1018,6 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
 
   function updateTransform() {
     svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
-    
-    // Update interactive layer positions when camera moves
-    updateInteractiveLayerPositions()
-  }
-
-  function updateInteractiveLayerPositions() {
-    const interactiveLayer = document.getElementById('interactive-layer')
-    if (!interactiveLayer || currentView !== 'castle') return
-    
-    const gridWidth = mainGrid.pixelWidth
-    const gridHeight = mainGrid.pixelHeight
-    const xOffset = (window.innerWidth - gridWidth) / 2
-    const yOffset = (window.innerHeight - gridHeight) / 2
-    
-    // Update all hex areas
-    let index = 0
-    for (const hex of mainGrid) {
-      const customHex = hex as CustomHex | VerticalHex
-      
-      if (shouldHideHex(customHex.radialDistance)) {
-        index++
-        continue
-      }
-      
-      const hexArea = interactiveLayer.querySelector(`[data-hex-index="${index}"]`) as HTMLElement
-      if (hexArea) {
-        const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
-        hexArea.style.left = `${transformedCoords.x - 30}px`
-        hexArea.style.top = `${transformedCoords.y - 30}px`
-      }
-      
-      // Update central hex text if it exists
-      if (customHex.radialDistance === 0) {
-        const textContainer = interactiveLayer.querySelector('.central-hex-text') as HTMLElement
-        if (textContainer) {
-          const transformedCoords = getTransformedHexCoordinates(hex, svg, xOffset, yOffset)
-          textContainer.style.left = `${transformedCoords.x - 30}px`
-          textContainer.style.top = `${transformedCoords.y + 20}px`
-        }
-      }
-      
-      index++
-    }
   }
 
   function handleStart(x: number, y: number) {
@@ -1323,9 +1119,6 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     }
     
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
-    
-    // Update interactive layer positions on resize
-    updateInteractiveLayerPositions()
   })
 }
 
