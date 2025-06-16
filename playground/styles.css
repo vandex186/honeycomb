@@ -351,7 +351,7 @@ body {
   padding: 20px;
   height: 100vh;
   overflow-y: auto;
-  background: linear-gradient(135deg, rgba(20, 20, 40, 0.9), rgba(40, 20, 60, 0.9));
+  background: linear-gradient(135deg, rgba(20, 20, 40, 0.3), rgba(40, 20, 60, 0.1));
 }
 
 .library-header {
