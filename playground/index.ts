@@ -777,19 +777,7 @@ function getTerrainType(index: number, radialDistance?: number, ringPosition?: n
         } else {
           return FOREST  // Default for other positions in ring 2
         }
-      case 3:
-        // Ring 3 specific assignments
-        if ([1, 2].includes(ringPosition)) {
-          return COAST  // 3/1, 3/2 - coast
-        } else if ([3, 4, 5, 6].includes(ringPosition)) {
-          return STEPPO  // 3/3, 3/4, 3/5, 3/6 - steppo
-        } else if ([7, 8].includes(ringPosition)) {
-          return FIELDS  // 3/7, 3/8 - field
-        } else if ([9, 10, 11, 12].includes(ringPosition)) {
-          return FOREST  // 3/9, 3/10, 3/11, 3/12 - forest
-        } else {
-          return NORTH_FOREST  // Default for other positions in ring 3
-        }
+      case 3: return NORTH_FOREST  // Ring 3 - North Forest (darker)
       case 4: return COAST         // Ring 4 - Coast
       case 5: return DEEP_BLUE     // Ring 5 - Deep Blue (outer ring)
       default: return STEPPO       // Fallback - Steppo
