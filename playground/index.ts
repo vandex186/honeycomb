@@ -1,281 +1,761 @@
-import { defineHex, Grid, rectangle, spiral, ring, Direction } from '../src'
+import { defineHex, Grid, rectangle } from '../src'
+import { Orientation } from '../src/hex/types'
+import { BUILDING, FIELD, ROAD, TREES, WATER } from '../examples/line-of-sight/terrain'
 
-// Define terrain types
-const CASTLE = 'castle'
-const FIELDS = 'fields'
-const FOREST = 'forest'
-const NORTH_FOREST = 'north_forest'
-const COAST = 'coast'
-const DEEP_BLUE = 'deep_blue'
-const STEPPO = 'steppo'
+interface GridOptions {
+  orientation: Orientation
+  width: number
+  height: number
+}
 
-type TerrainType = typeof CASTLE | typeof FIELDS | typeof FOREST | typeof NORTH_FOREST | typeof COAST | typeof DEEP_BLUE | typeof STEPPO
-
-// Define custom hex classes
 class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
-  radialDistance!: number
-  ringPosition!: number
+  custom = 'test'
+  transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
-  terrain!: TerrainType
+  radialDistance?: number
+  ringPosition?: number // New property for position within ring
 }
 
-class VerticalHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
-  radialDistance!: number
-  ringPosition!: number
+class VerticalHex extends defineHex({ 
+  dimensions: 30, 
+  origin: 'topLeft',
+  orientation: Orientation.FLAT 
+}) {
+  custom = 'test'
+  transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
-  terrain!: TerrainType
+  radialDistance?: number
+  ringPosition?: number // New property for position within ring
 }
 
-// Game state
-let currentView = 'castle'
-let showCoordinates = true
-let showVisibility = false
+// Grid state
 let mainGrid: Grid<CustomHex | VerticalHex>
+let currentView = 'dungeon'
+let showCoordinates = false
+let showVisibility = false
+let currentLibraryContent: string | null = null
 
-// Camera state for 3D transformations
-const cameraState = {
-  isDragging: false,
-  lastX: 0,
-  lastY: 0,
-  rotationX: 0,
-  rotationY: 0,
-  scale: 1,
-  translateX: 0,
-  translateY: 0,
-  matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+// New terrain types based on the reference image
+const FIELDS = {
+  type: 'Fields',
+  passable: true,
+  opaque: false,
 }
 
-// Update camera matrix based on current state
-function updateCameraMatrix() {
-  if (currentView === 'castle') {
-    // 3D transformation matrix for castle view
-    const cosX = Math.cos(cameraState.rotationX)
-    const sinX = Math.sin(cameraState.rotationX)
-    const cosY = Math.cos(cameraState.rotationY)
-    const sinY = Math.sin(cameraState.rotationY)
+const NORTH_FOREST = {
+  type: 'North Forest',
+  passable: false,
+  opaque: true,
+}
 
-    cameraState.matrix = [
-      cosY * cameraState.scale, sinX * sinY * cameraState.scale, -cosX * sinY * cameraState.scale, 0,
-      0, cosX * cameraState.scale, sinX * cameraState.scale, -0.002,
-      sinY * cameraState.scale, -sinX * cosY * cameraState.scale, cosX * cosY * cameraState.scale, 0,
-      cameraState.translateX, cameraState.translateY, 0, 1
-    ]
-  } else {
-    // 2D transformation matrix for other views
-    cameraState.matrix = [
-      cameraState.scale, 0, 0, 0,
-      0, cameraState.scale, 0, 0,
-      0, 0, 1, 0,
-      cameraState.translateX, cameraState.translateY, 0, 1
-    ]
+const FOREST = {
+  type: 'Forest',
+  passable: false,
+  opaque: true,
+}
+
+const COAST = {
+  type: 'Coast',
+  passable: true,
+  opaque: false,
+}
+
+const DEEP_BLUE = {
+  type: 'Deep Blue',
+  passable: false,
+  opaque: false,
+}
+
+const STEPPO = {
+  type: 'Steppo',
+  passable: true,
+  opaque: false,
+}
+
+const CASTLE = {
+  type: 'Castle',
+  passable: false,
+  opaque: true,
+}
+
+// Avatar content data for different views
+const avatarData = {
+  dungeon: {
+    title: 'Dungeon Explorer',
+    stats: ['Level: 12', 'HP: 85/100', 'Gold: 1,250']
+  },
+  hero: {
+    title: 'Hero Profile',
+    stats: ['Strength: 18', 'Agility: 15', 'Magic: 12']
+  },
+  castle: {
+    title: 'Castle Lord',
+    stats: ['Territory: 5', 'Army: 250', 'Resources: 850']
+  },
+  library: {
+    title: 'Scholar',
+    stats: ['Books: 47', 'Spells: 23', 'Research: 89%']
   }
 }
 
-// Initialize the application
-function init() {
-  setupNavigation()
-  setupControls()
-  createGrid()
-  renderGrid(currentView)
-}
-
-// Setup navigation
-function setupNavigation() {
-  // Handle navigation buttons
-  document.querySelectorAll('[data-view]').forEach(button => {
-    button.addEventListener('click', (e) => {
-      e.preventDefault()
-      const view = (e.target as HTMLElement).getAttribute('data-view')
-      if (view) {
-        switchView(view)
-      }
-    })
-  })
-
-  // Setup burger menu
-  const burgerMenu = document.getElementById('burger-menu')
-  const menuOverlay = document.getElementById('menu-overlay')
-  const closeMenu = document.getElementById('close-menu')
-
-  if (burgerMenu && menuOverlay && closeMenu) {
-    burgerMenu.addEventListener('click', () => {
-      menuOverlay.classList.add('active')
-      burgerMenu.classList.add('active')
-    })
-
-    closeMenu.addEventListener('click', () => {
-      menuOverlay.classList.remove('active')
-      burgerMenu.classList.remove('active')
-    })
-
-    // Close menu when clicking overlay
-    menuOverlay.addEventListener('click', (e) => {
-      if (e.target === menuOverlay) {
-        menuOverlay.classList.remove('active')
-        burgerMenu.classList.remove('active')
-      }
-    })
-
-    // Handle menu item clicks
-    menuOverlay.querySelectorAll('.menu-item[data-view]').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault()
-        const view = (e.target as HTMLElement).closest('[data-view]')?.getAttribute('data-view')
-        if (view) {
-          switchView(view)
-          menuOverlay.classList.remove('active')
-          burgerMenu.classList.remove('active')
-        }
-      })
-    })
+// Library content data
+const libraryContent = {
+  castle: {
+    icon: '🏰',
+    title: 'Castle Management',
+    content: 'Learn about castle construction, defense strategies, and managing your stronghold. Includes blueprints for towers, walls, and fortifications.'
+  },
+  buildings: {
+    icon: '🏢',
+    title: 'Buildings & Structures',
+    content: 'Comprehensive guide to all building types: residential, commercial, military, and special structures. Each building type has unique benefits and requirements.'
+  },
+  upgrades: {
+    icon: '🪚',
+    title: 'Upgrades & Improvements',
+    content: 'Enhancement systems for buildings, weapons, and equipment. Learn about upgrade paths, resource requirements, and efficiency improvements.'
+  },
+  dungeons: {
+    icon: '⛩',
+    title: 'Dungeon Exploration',
+    content: 'Complete guide to dungeon types, monster encounters, treasure locations, and survival strategies. Includes maps of known dungeons.'
+  },
+  clouds: {
+    icon: '☁️',
+    title: 'Weather & Climate',
+    content: 'Understanding weather patterns, seasonal changes, and their effects on gameplay. Weather can affect travel, combat, and resource gathering.'
+  },
+  citizens: {
+    icon: '👨‍⚕️',
+    title: 'Citizens & NPCs',
+    content: 'Information about different citizen types, their roles, needs, and how to manage population happiness and productivity.'
+  },
+  turns: {
+    icon: '⏳',
+    title: 'Turn Management',
+    content: 'Strategic guide to turn-based gameplay, action points, time management, and optimizing your moves for maximum efficiency.'
+  },
+  lands: {
+    icon: '⛳',
+    title: 'Lands & Territories',
+    content: 'Exploration of different land types, territorial control, expansion strategies, and managing multiple regions effectively.'
+  },
+  animals: {
+    icon: '🐑',
+    title: 'Animals & Livestock',
+    content: 'Guide to animal husbandry, wildlife management, breeding programs, and the benefits of different animal types.'
+  },
+  flora: {
+    icon: '🌳',
+    title: 'Flora & Vegetation',
+    content: 'Botanical knowledge including medicinal plants, rare herbs, magical flora, and their uses in crafting and alchemy.'
+  },
+  food: {
+    icon: '🍎',
+    title: 'Food & Nutrition',
+    content: 'Food production, preservation techniques, nutritional benefits, and special recipes that provide gameplay bonuses.'
+  },
+  resources: {
+    icon: '💎',
+    title: 'Resources & Materials',
+    content: 'Complete catalog of all resources: common materials, rare gems, magical components, and their applications in crafting.'
+  },
+  structures: {
+    icon: '🏠',
+    title: 'Structures & Architecture',
+    content: 'Architectural principles, structural engineering, and design patterns for creating efficient and beautiful constructions.'
+  },
+  objects: {
+    icon: '🗿',
+    title: 'Objects & Artifacts',
+    content: 'Catalog of special objects, ancient artifacts, magical items, and their historical significance and powers.'
+  },
+  budget: {
+    icon: '💰',
+    title: 'Budget & Economics',
+    content: 'Financial management, trade systems, taxation, resource allocation, and economic strategies for prosperity.'
+  },
+  hero: {
+    icon: '🐵',
+    title: 'Hero Development',
+    content: 'Character progression, skill trees, attribute development, and strategies for creating powerful hero builds.'
+  },
+  level: {
+    icon: '🏆',
+    title: 'Level & Experience',
+    content: 'Experience systems, leveling mechanics, milestone rewards, and progression optimization strategies.'
+  },
+  weapon: {
+    icon: '🗡',
+    title: 'Weapons & Combat',
+    content: 'Weapon types, combat mechanics, fighting techniques, and weapon enhancement systems for maximum effectiveness.'
+  },
+  gestures: {
+    icon: '✌️',
+    title: 'Gestures & Commands',
+    content: 'Control schemes, gesture commands, hotkeys, and interface optimization for efficient gameplay.'
+  },
+  magic: {
+    icon: '🔥',
+    title: 'Magic & Spells',
+    content: 'Magical systems, spell casting, mana management, elemental magic, and advanced magical techniques.'
+  },
+  aspects: {
+    icon: '✨',
+    title: 'Aspects & Elements',
+    content: 'Elemental aspects, their interactions, strengths and weaknesses, and how to harness elemental powers effectively.'
+  },
+  fraction: {
+    icon: '🦋',
+    title: 'Fractions & Guilds',
+    content: 'Political factions, guild systems, alliance mechanics, and diplomatic strategies for faction management.'
+  },
+  backpack: {
+    icon: '🎒',
+    title: 'Inventory & Storage',
+    content: 'Inventory management, storage solutions, item organization, and capacity optimization techniques.'
+  },
+  items: {
+    icon: '🏹',
+    title: 'Items & Equipment',
+    content: 'Complete item database, equipment stats, set bonuses, and optimal equipment combinations for different playstyles.'
+  },
+  masks: {
+    icon: '🎭',
+    title: 'Masks & Disguises',
+    content: 'Disguise systems, stealth mechanics, social infiltration, and the art of deception in diplomatic missions.'
+  },
+  hearts: {
+    icon: '❤️‍🔥',
+    title: 'Hearts & Relationships',
+    content: 'Relationship systems, romance options, friendship mechanics, and social interaction strategies.'
+  },
+  fight: {
+    icon: '⚔️',
+    title: 'Combat & Tactics',
+    content: 'Advanced combat strategies, tactical formations, battle planning, and victory conditions for different combat scenarios.'
+  },
+  creatures: {
+    icon: '🐙',
+    title: 'Creatures & Monsters',
+    content: 'Bestiary of all creatures, their behaviors, weaknesses, and strategies for combat or taming.'
+  },
+  loot: {
+    icon: '🫀',
+    title: 'Loot & Rewards',
+    content: 'Loot systems, treasure hunting, reward mechanics, and strategies for maximizing valuable discoveries.'
+  },
+  ingredients: {
+    icon: '🌸',
+    title: 'Ingredients & Components',
+    content: 'Crafting ingredients, their sources, properties, and optimal harvesting techniques for maximum yield.'
+  },
+  coins: {
+    icon: '🪙',
+    title: 'Currency & Trade',
+    content: 'Economic systems, currency types, trade routes, market dynamics, and wealth accumulation strategies.'
+  },
+  timer: {
+    icon: '⏱️',
+    title: 'Time & Scheduling',
+    content: 'Time management systems, scheduling mechanics, deadline management, and temporal strategy optimization.'
+  },
+  mechanics: {
+    icon: '⚙️',
+    title: 'Game Mechanics',
+    content: 'Core gameplay systems, rule explanations, mechanical interactions, and advanced technique guides.'
+  },
+  knowledge: {
+    icon: '📚',
+    title: 'Knowledge & Lore',
+    content: 'Historical records, world lore, ancient knowledge, and scholarly research on various topics.'
+  },
+  genetics: {
+    icon: '🧬',
+    title: 'Genetics & Breeding',
+    content: 'Genetic systems, breeding mechanics, trait inheritance, and optimization of genetic combinations.'
+  },
+  craft: {
+    icon: '🛠',
+    title: 'Crafting & Creation',
+    content: 'Crafting systems, recipe databases, material combinations, and advanced crafting techniques.'
+  },
+  alchemy: {
+    icon: '⚗',
+    title: 'Alchemy & Potions',
+    content: 'Alchemical processes, potion brewing, magical transmutation, and advanced alchemical theories.'
+  },
+  calligraphy: {
+    icon: '📜',
+    title: 'Calligraphy & Scripts',
+    content: 'Ancient scripts, magical writing, enchanted scrolls, and the art of magical calligraphy.'
+  },
+  mining: {
+    icon: '⛏️',
+    title: 'Mining & Extraction',
+    content: 'Mining techniques, ore identification, extraction methods, and geological survey strategies.'
+  },
+  culinary: {
+    icon: '🍽️',
+    title: 'Culinary Arts',
+    content: 'Cooking techniques, recipe development, food enhancement, and the magical properties of cuisine.'
+  },
+  cultivating: {
+    icon: '🪴',
+    title: 'Cultivation & Farming',
+    content: 'Agricultural techniques, crop rotation, soil management, and magical plant cultivation methods.'
+  },
+  trading: {
+    icon: '⚖️',
+    title: 'Trading & Commerce',
+    content: 'Trade negotiations, market analysis, commercial strategies, and building successful trading empires.'
+  },
+  map: {
+    icon: '🗺️',
+    title: 'Maps & Navigation',
+    content: 'Cartography, navigation techniques, map reading, and exploration strategies for unknown territories.'
+  },
+  anchors: {
+    icon: '⚓',
+    title: 'Anchors & Waypoints',
+    content: 'Navigation anchors, waypoint systems, fast travel mechanics, and strategic positioning guides.'
+  },
+  space: {
+    icon: '🚀',
+    title: 'Space Pirates',
+    content: 'Advanced exploration, space travel mechanics, pirate encounters, and interstellar adventure strategies.'
   }
 }
 
-// Setup control buttons
-function setupControls() {
-  const coordinatesToggle = document.getElementById('coordinates-toggle')
-  const visibilityToggle = document.getElementById('visibility-toggle')
-
-  if (coordinatesToggle) {
-    coordinatesToggle.addEventListener('click', () => {
-      showCoordinates = !showCoordinates
-      renderGrid(currentView)
-    })
-  }
-
-  if (visibilityToggle) {
-    visibilityToggle.addEventListener('click', () => {
-      showVisibility = !showVisibility
-      renderGrid(currentView)
-    })
-  }
+function createGrid(options: GridOptions) {
+  const HexClass = options.orientation === Orientation.POINTY ? CustomHex : VerticalHex
+  return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
 }
 
-// Switch between different views
-function switchView(view: string) {
-  currentView = view
-  document.body.setAttribute('data-view', view)
+// Calculate radial distance from castle hex (center)
+function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: number): number {
+  // Convert linear index to grid coordinates
+  const fromRow = Math.floor(fromIndex / gridWidth)
+  const fromCol = fromIndex % gridWidth
+  const toRow = Math.floor(toIndex / gridWidth)
+  const toCol = toIndex % gridWidth
   
-  // Update active states
-  document.querySelectorAll('[data-view]').forEach(button => {
-    button.classList.remove('active')
-  })
-  document.querySelectorAll(`[data-view="${view}"]`).forEach(button => {
-    button.classList.add('active')
-  })
+  // Convert to axial coordinates (for pointy-top hexes)
+  const fromQ = fromCol - Math.floor(fromRow / 2)
+  const fromR = fromRow
+  const toQ = toCol - Math.floor(toRow / 2)
+  const toR = toRow
+  
+  // Calculate cube coordinates
+  const fromS = -fromQ - fromR
+  const toS = -toQ - toR
+  
+  // Calculate distance using cube coordinates
+  return Math.max(
+    Math.abs(fromQ - toQ),
+    Math.abs(fromR - toR),
+    Math.abs(fromS - toS)
+  )
+}
 
-  // Reset camera state when switching views
-  cameraState.rotationX = 0
-  cameraState.rotationY = 0
-  cameraState.scale = 1
-  cameraState.translateX = 0
-  cameraState.translateY = 0
+// Calculate position within ring for a hex
+function calculateRingPosition(hexIndex: number, gridWidth: number, gridHeight: number, centerIndex: number, radialDistance: number): number {
+  if (radialDistance === 0) return 0 // Center hex
+  
+  // Convert linear index to grid coordinates
+  const row = Math.floor(hexIndex / gridWidth)
+  const col = hexIndex % gridWidth
+  const centerRow = Math.floor(centerIndex / gridWidth)
+  const centerCol = centerIndex % gridWidth
+  
+  // Convert to axial coordinates
+  const q = col - Math.floor(row / 2)
+  const r = row
+  const centerQ = centerCol - Math.floor(centerRow / 2)
+  const centerR = centerRow
+  
+  // Calculate relative position from center
+  const relativeQ = q - centerQ
+  const relativeR = r - centerR
+  
+  // For ring positioning, we'll use a simple angle-based approach
+  // Calculate angle from center to this hex
+  const angle = Math.atan2(relativeR, relativeQ)
+  
+  // Convert angle to position (0-based)
+  // Normalize angle to 0-2π range
+  const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle
+  
+  // Calculate approximate position based on ring size
+  // Ring size is approximately 6 * radialDistance for hex grids
+  const ringSize = radialDistance === 1 ? 6 : 6 * radialDistance
+  const position = Math.floor((normalizedAngle / (2 * Math.PI)) * ringSize) + 1
+  
+  return Math.min(position, ringSize) // Ensure we don't exceed ring size
+}
 
-  createGrid()
+function updateAvatarContent(view: string) {
+  // Avatar is now just a circle, no additional content needed
+}
+
+function updateNavButtonStates(activeView: string) {
+  // Update navigation tab buttons
+  document.querySelectorAll('.nav-tab-button').forEach(btn => {
+    btn.classList.remove('active')
+    if ((btn as HTMLElement).dataset.view === activeView) {
+      btn.classList.add('active')
+    }
+  })
+}
+
+function showLibraryContent(contentKey: string) {
+  const container = document.getElementById('container')
+  if (!container) return
+
+  const content = libraryContent[contentKey as keyof typeof libraryContent]
+  if (!content) return
+
+  currentLibraryContent = contentKey
+  
+  container.innerHTML = `
+    <div class="content-page">
+      <div class="content-header">
+        <div class="content-title">
+          <span style="font-size: 3rem;">${content.icon}</span>
+          <span>${content.title}</span>
+        </div>
+        <button class="back-button" onclick="showLibraryMain()">← Back to Library</button>
+      </div>
+      <div class="content-body">
+        <p>${content.content}</p>
+      </div>
+    </div>
+  `
+}
+
+function showLibraryMain() {
+  currentLibraryContent = null
+  const container = document.getElementById('container')
+  if (!container) return
+
+  container.innerHTML = `
+    <div class="library-container">
+      <div class="library-header">
+        <div style="font-size: 4rem; margin-bottom: 10px;">📚</div>
+        <h1 class="library-title">Library of Knowledge</h1>
+        <p class="library-subtitle">Explore the vast collection of wisdom and information</p>
+      </div>
+      
+      <div class="library-categories">
+        <div class="category-section">
+          <h2 class="category-title">🏰 Castle & Lands</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('castle')">
+              <div class="library-button-icon">🏰</div>
+              <div class="library-button-text">Castle</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('buildings')">
+              <div class="library-button-icon">🏢</div>
+              <div class="library-button-text">Buildings</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('upgrades')">
+              <div class="library-button-icon">🪚</div>
+              <div class="library-button-text">Upgrades</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('dungeons')">
+              <div class="library-button-icon">⛩</div>
+              <div class="library-button-text">Dungeons</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('clouds')">
+              <div class="library-button-icon">☁️</div>
+              <div class="library-button-text">Clouds</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('citizens')">
+              <div class="library-button-icon">👨‍⚕️</div>
+              <div class="library-button-text">Citizens</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('turns')">
+              <div class="library-button-icon">⏳</div>
+              <div class="library-button-text">Turns</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🌍 World & Resources</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('lands')">
+              <div class="library-button-icon">⛳</div>
+              <div class="library-button-text">Lands</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('animals')">
+              <div class="library-button-icon">🐑</div>
+              <div class="library-button-text">Animals</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('flora')">
+              <div class="library-button-icon">🌳</div>
+              <div class="library-button-text">Flora</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('food')">
+              <div class="library-button-icon">🍎</div>
+              <div class="library-button-text">Food</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('resources')">
+              <div class="library-button-icon">💎</div>
+              <div class="library-button-text">Resources</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('structures')">
+              <div class="library-button-icon">🏠</div>
+              <div class="library-button-text">Structures</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('objects')">
+              <div class="library-button-icon">🗿</div>
+              <div class="library-button-text">Objects</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('budget')">
+              <div class="library-button-icon">💰</div>
+              <div class="library-button-text">Budget</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🦊 Hero & Character</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('hero')">
+              <div class="library-button-icon">🐵</div>
+              <div class="library-button-text">Hero</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('level')">
+              <div class="library-button-icon">🏆</div>
+              <div class="library-button-text">Level</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('weapon')">
+              <div class="library-button-icon">🗡</div>
+              <div class="library-button-text">Weapon</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('gestures')">
+              <div class="library-button-icon">✌️</div>
+              <div class="library-button-text">Gestures</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('magic')">
+              <div class="library-button-icon">🔥</div>
+              <div class="library-button-text">Magic</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('aspects')">
+              <div class="library-button-icon">✨</div>
+              <div class="library-button-text">Aspects</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('fraction')">
+              <div class="library-button-icon">🦋</div>
+              <div class="library-button-text">Fraction</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('backpack')">
+              <div class="library-button-icon">🎒</div>
+              <div class="library-button-text">Backpack</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('items')">
+              <div class="library-button-icon">🏹</div>
+              <div class="library-button-text">Items</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('masks')">
+              <div class="library-button-icon">🎭</div>
+              <div class="library-button-text">Masks</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('hearts')">
+              <div class="library-button-icon">❤️‍🔥</div>
+              <div class="library-button-text">Hearts</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">⚔️ Combat & Adventure</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('fight')">
+              <div class="library-button-icon">⚔️</div>
+              <div class="library-button-text">Fight</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('creatures')">
+              <div class="library-button-icon">🐙</div>
+              <div class="library-button-text">Creatures</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('loot')">
+              <div class="library-button-icon">🫀</div>
+              <div class="library-button-text">Loot</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('ingredients')">
+              <div class="library-button-icon">🌸</div>
+              <div class="library-button-text">Ingredients</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('coins')">
+              <div class="library-button-icon">🪙</div>
+              <div class="library-button-text">Coins</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('timer')">
+              <div class="library-button-icon">⏱️</div>
+              <div class="library-button-text">Timer</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🔬 Crafting & Knowledge</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('mechanics')">
+              <div class="library-button-icon">⚙️</div>
+              <div class="library-button-text">Mechanics</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('knowledge')">
+              <div class="library-button-icon">📚</div>
+              <div class="library-button-text">Knowledge</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('genetics')">
+              <div class="library-button-icon">🧬</div>
+              <div class="library-button-text">Genetics</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('craft')">
+              <div class="library-button-icon">🛠</div>
+              <div class="library-button-text">Craft</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('alchemy')">
+              <div class="library-button-icon">⚗</div>
+              <div class="library-button-text">Alchemy</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('calligraphy')">
+              <div class="library-button-icon">📜</div>
+              <div class="library-button-text">Calligraphy</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('mining')">
+              <div class="library-button-icon">⛏️</div>
+              <div class="library-button-text">Mining</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('culinary')">
+              <div class="library-button-icon">🍽️</div>
+              <div class="library-button-text">Culinary</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('cultivating')">
+              <div class="library-button-icon">🪴</div>
+              <div class="library-button-text">Cultivating</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('trading')">
+              <div class="library-button-icon">⚖️</div>
+              <div class="library-button-text">Trading</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h2 class="category-title">🗺️ Exploration & Navigation</h2>
+          <div class="category-buttons">
+            <button class="library-button" onclick="showLibraryContent('map')">
+              <div class="library-button-icon">🗺️</div>
+              <div class="library-button-text">Map</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('anchors')">
+              <div class="library-button-icon">⚓</div>
+              <div class="library-button-text">Anchors</div>
+            </button>
+            <button class="library-button" onclick="showLibraryContent('space')">
+              <div class="library-button-icon">🚀</div>
+              <div class="library-button-text">Space Pirates</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+// Make functions globally available
+;(window as any).showLibraryContent = showLibraryContent
+;(window as any).showLibraryMain = showLibraryMain
+
+function initializeGrid(view: string) {
+  document.body.setAttribute('data-view', view)
+  updateAvatarContent(view)
+  updateNavButtonStates(view)
+  
+  const container = document.getElementById('container')
+  if (container) {
+    container.innerHTML = '' // Clear previous content
+  }
+
+  let gridOptions: GridOptions
+
+  switch (view) {
+    case 'dungeon':
+      gridOptions = {
+        orientation: Orientation.FLAT,
+        width: 7,
+        height: 7
+      }
+      break
+    case 'castle': // This is now the chart view (renamed)
+      gridOptions = {
+        orientation: Orientation.POINTY,
+        width: 11,  // Increased to accommodate 5 rings
+        height: 11  // Increased to accommodate 5 rings
+      }
+      break
+    case 'library':
+      showLibraryMain()
+      return
+    default:
+      gridOptions = {
+        orientation: Orientation.POINTY,
+        width: 7,
+        height: 7
+      }
+      break
+  }
+
+  if (view === 'hero') {
+    if (container) {
+      container.innerHTML = '<div style="color: white; font-size: 2rem;">Hero View Coming Soon</div>'
+    }
+    return
+  }
+
+  mainGrid = createGrid(gridOptions)
+  
+  // Calculate radial distances and ring positions for castle view
+  if (view === 'castle') {
+    // Castle is now at the center of the 11x11 grid
+    const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
+    let index = 0
+    for (const hex of mainGrid) {
+      const customHex = hex as CustomHex | VerticalHex
+      customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
+      customHex.ringPosition = calculateRingPosition(index, gridOptions.width, gridOptions.height, castleIndex, customHex.radialDistance)
+      
+      // Set visibility based on ring distance
+      if (customHex.radialDistance === 5) {
+        customHex.visibility = 'undiscovered'  // Ring 5 - Dark (undiscovered) #000 80%
+      } else if (customHex.radialDistance === 2 || customHex.radialDistance === 3 || customHex.radialDistance === 4) {
+        customHex.visibility = 'discovered'    // Rings 2-3-4 - transparency 100% (discovered)
+      } else {
+        customHex.visibility = 'visible'       // Other rings - visible
+      }
+      
+      index++
+    }
+  }
+  
   renderGrid(view)
 }
 
-// Create the hex grid based on current view
-function createGrid() {
-  if (currentView === 'castle') {
-    // Create a spiral grid for castle view
-    mainGrid = new Grid(CustomHex, spiral({ radius: 5 }))
-    
-    // Calculate radial distance and ring position for each hex
-    let index = 0
-    for (const hex of mainGrid) {
-      const customHex = hex as CustomHex
-      customHex.radialDistance = Math.max(Math.abs(hex.q), Math.abs(hex.r), Math.abs(hex.s))
-      customHex.ringPosition = calculateRingPosition(hex.q, hex.r, customHex.radialDistance)
-      customHex.visibility = 'visible'
-      customHex.terrain = getTerrainType(index, customHex.radialDistance)
-      index++
-    }
-  } else {
-    // Create a rectangular grid for other views
-    mainGrid = new Grid(VerticalHex, rectangle({ width: 8, height: 6 }))
-    
-    let index = 0
-    for (const hex of mainGrid) {
-      const verticalHex = hex as VerticalHex
-      verticalHex.radialDistance = 0
-      verticalHex.ringPosition = 0
-      verticalHex.visibility = Math.random() > 0.3 ? 'visible' : Math.random() > 0.5 ? 'discovered' : 'undiscovered'
-      verticalHex.terrain = getTerrainType(index)
-      index++
-    }
+function getTerrainEmoji(terrain: any) {
+  switch(terrain.type) {
+    case 'Deep Blue': return '🌊'
+    case 'Fields': return '🌾'
+    case 'Coast': return '🏖️'
+    case 'Forest': return '🌲'
+    case 'North Forest': return '🌲'
+    case 'Steppo': return '🌿'
+    case 'Castle': return '🏰'
+    default: return ''
   }
-}
-
-// Calculate ring position for a hex
-function calculateRingPosition(q: number, r: number, ring: number): number {
-  if (ring === 0) return 0
-  
-  const s = -q - r
-  
-  // For each ring, we need to determine position based on which "side" of the hexagon the hex is on
-  // A hexagon has 6 sides, and we traverse clockwise starting from the right side
-  
-  if (ring === 1) {
-    // Ring 1: 6 hexes
-    if (q === 1 && r === 0) return 1      // Right
-    if (q === 1 && r === -1) return 2     // Top-right
-    if (q === 0 && r === -1) return 3     // Top-left
-    if (q === -1 && r === 0) return 4     // Left
-    if (q === -1 && r === 1) return 5     // Bottom-left
-    if (q === 0 && r === 1) return 6      // Bottom-right
-  } else if (ring === 2) {
-    // Ring 2: 12 hexes
-    const positions = [
-      [2, 0], [2, -1], [2, -2],           // Right side (3 hexes)
-      [1, -2], [0, -2],                   // Top-right side (2 hexes)
-      [-1, -1], [-2, 0],                  // Top-left side (2 hexes)
-      [-2, 1], [-2, 2],                   // Left side (2 hexes)
-      [-1, 2], [0, 2],                    // Bottom-left side (2 hexes)
-      [1, 1]                              // Bottom-right side (1 hex)
-    ]
-    
-    for (let i = 0; i < positions.length; i++) {
-      if (positions[i][0] === q && positions[i][1] === r) {
-        return i + 1
-      }
-    }
-  } else if (ring === 3) {
-    // Ring 3: 18 hexes
-    const positions = [
-      [3, 0], [3, -1], [3, -2], [3, -3],  // Right side (4 hexes)
-      [2, -3], [1, -3], [0, -3],          // Top-right side (3 hexes)
-      [-1, -2], [-2, -1], [-3, 0],        // Top-left side (3 hexes)
-      [-3, 1], [-3, 2], [-3, 3],          // Left side (3 hexes)
-      [-2, 3], [-1, 3], [0, 3],           // Bottom-left side (3 hexes)
-      [1, 2], [2, 1]                      // Bottom-right side (2 hexes)
-    ]
-    
-    for (let i = 0; i < positions.length; i++) {
-      if (positions[i][0] === q && positions[i][1] === r) {
-        return i + 1
-      }
-    }
-  } else if (ring === 4) {
-    // Ring 4: 24 hexes
-    const positions = [
-      [4, 0], [4, -1], [4, -2], [4, -3], [4, -4],     // Right side (5 hexes)
-      [3, -4], [2, -4], [1, -4], [0, -4],             // Top-right side (4 hexes)
-      [-1, -3], [-2, -2], [-3, -1], [-4, 0],          // Top-left side (4 hexes)
-      [-4, 1], [-4, 2], [-4, 3], [-4, 4],             // Left side (4 hexes)
-      [-3, 4], [-2, 4], [-1, 4], [0, 4],              // Bottom-left side (4 hexes)
-      [1, 3], [2, 2], [3, 1]                          // Bottom-right side (3 hexes)
-    ]
-    
-    for (let i = 0; i < positions.length; i++) {
-      if (positions[i][0] === q && positions[i][1] === r) {
-        return i + 1
-      }
-    }
-  }
-  
-  // Fallback for other rings or unmatched positions
-  return 1
 }
 
 function getTerrainType(index: number, radialDistance?: number) {
@@ -288,178 +768,231 @@ function getTerrainType(index: number, radialDistance?: number) {
       case 3: return NORTH_FOREST  // Ring 3 - North Forest (darker)
       case 4: return COAST         // Ring 4 - Coast
       case 5: return DEEP_BLUE     // Ring 5 - Deep Blue (outer ring)
-      default: return STEPPO      // Default for outer rings
+      default: return STEPPO       // Fallback - Steppo
     }
   }
   
-  // For other views, use index-based assignment
-  const terrainTypes = [FIELDS, FOREST, NORTH_FOREST, COAST, DEEP_BLUE, STEPPO]
-  return terrainTypes[index % terrainTypes.length]
+  // For other views, use the original logic
+  if (index === 36) {
+    return CASTLE
+  }
+  
+  // Specific field hexes: 27, 28, 37, 44, 43, 35
+  if ([27, 28, 37, 44, 43, 35].includes(index)) {
+    return FIELDS
+  }
+  
+  const terrains = [FIELDS, COAST, FOREST, NORTH_FOREST, DEEP_BLUE, STEPPO]
+  return terrains[index % terrains.length]
 }
 
-function getTerrainColor(terrain: TerrainType): string {
-  switch (terrain) {
-    case CASTLE: return '#8B4513'      // Brown for castle
-    case FIELDS: return '#FFD700'      // Yellow for fields
-    case FOREST: return '#228B22'      // Green for forest
-    case NORTH_FOREST: return '#006400' // Dark green for north forest
-    case COAST: return '#4169E1'       // Blue for coast
-    case DEEP_BLUE: return '#191970'   // Dark blue for deep water
-    case STEPPO: return '#9ACD32'      // Yellow-green for steppo
-    default: return '#808080'          // Gray default
+function getTerrainColor(terrain: any): string {
+  switch(terrain.type) {
+    case 'Fields': return '#FFD700'        // Bright yellow for fields
+    case 'North Forest': return '#1B4332'  // Dark green for north forest
+    case 'Forest': return '#2D5016'        // Medium green for forest
+    case 'Coast': return '#4A90E2'         // Light blue for coast
+    case 'Deep Blue': return '#1E3A8A'     // Dark blue for deep water
+    case 'Steppo': return '#8B7355'        // Brown/olive for steppo
+    case 'Castle': return '#8B0000'        // Dark red for castle
+    default: return '#ffffff'
   }
 }
 
-function getTerrainEmoji(terrain: TerrainType): string {
-  switch (terrain) {
-    case CASTLE: return '🏰'
-    case FIELDS: return '🌾'
-    case FOREST: return '🌲'
-    case NORTH_FOREST: return '🌲'
-    case COAST: return '🌊'
-    case DEEP_BLUE: return '🌊'
-    case STEPPO: return '🌿'
-    default: return '❓'
-  }
+function shouldHideHex(radialDistance?: number): boolean {
+  // Hide hexes with radial distance 6 or 7
+  return radialDistance !== undefined && radialDistance >= 6
 }
 
-function shouldHideHex(radialDistance: number): boolean {
-  return currentView === 'castle' && radialDistance > 4
-}
-
-function shouldShowButtonEffects(radialDistance: number): boolean {
-  return currentView === 'castle' && radialDistance <= 4
+// Check if hex should show button effects (now includes ring 5)
+function shouldShowButtonEffects(radialDistance?: number): boolean {
+  return radialDistance !== undefined && radialDistance <= 5
 }
 
 function renderGrid(view: string) {
   const container = document.getElementById('container')
   if (!container) return
 
-  // Clear existing content
+  // Clear container completely
   container.innerHTML = ''
 
-  // Create SVG
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.classList.add('hex-grid')
-  svg.setAttribute('width', '100%')
-  svg.setAttribute('height', '100%')
-  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
 
-  // Create main group for the grid
-  const mainGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-  svg.appendChild(mainGridGroup)
-
-  // Calculate grid dimensions and centering
   const gridWidth = mainGrid.pixelWidth
   const gridHeight = mainGrid.pixelHeight
   const xOffset = (window.innerWidth - gridWidth) / 2
   const yOffset = (window.innerHeight - gridHeight) / 2
 
-  // Apply transformation
-  updateCameraMatrix()
-  svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
+  svg.setAttribute('width', '100%')
+  svg.setAttribute('height', '100%')
+  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+  svg.classList.add('hex-grid')
+  svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
+  container.appendChild(svg)
 
+  // Main grid group (with 3D transformation)
+  const mainGridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  mainGridGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  mainGridGroup.setAttribute('id', 'main-grid')
+  svg.appendChild(mainGridGroup)
+
+  // Fog of war overlay group (separate layer above main grid)
+  const fogOverlayGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  fogOverlayGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`)
+  fogOverlayGroup.setAttribute('id', 'fog-overlay')
+  fogOverlayGroup.style.pointerEvents = 'none' // Allow clicks to pass through
+  // Add backdrop blur class to fog overlay
+  fogOverlayGroup.classList.add('backdropblur')
+  svg.appendChild(fogOverlayGroup)
+
+  // Render main grid
   let index = 0
   for (const hex of mainGrid) {
     const customHex = hex as CustomHex | VerticalHex
-
-    // Skip hexes that should be hidden
-    if (shouldHideHex(customHex.radialDistance)) {
+    
+    // Skip rendering hexes with radial distance 6 or 7 in castle view
+    if (view === 'castle' && shouldHideHex(customHex.radialDistance)) {
       index++
       continue
     }
-
-    // Create hex group
-    const hexGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-    hexGroup.setAttribute('transform', `translate(${hex.x + xOffset}, ${hex.y + yOffset})`)
-
-    // Create polygon
+    
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-    const points = hex.corners.map(corner => `${corner.x - hex.x},${corner.y - hex.y}`).join(' ')
+    const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
+    
     polygon.setAttribute('points', points)
-
+    
     // Add terrain background color for castle view
     if (view === 'castle') {
       const terrainType = getTerrainType(index, customHex.radialDistance)
       const terrainColor = getTerrainColor(terrainType)
       polygon.style.fill = terrainColor
-      polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
-      polygon.style.strokeWidth = '1'
     } else {
-      // Default styling for other views
       polygon.style.fill = 'rgba(255, 255, 255, 0.1)'
-      polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
-      polygon.style.strokeWidth = '1'
     }
-
-    // Add visibility effects
-    if (showVisibility) {
-      polygon.classList.add(`visibility-${customHex.visibility}`)
+    
+    polygon.style.stroke = 'rgba(255, 255, 255, 0.5)'
+    polygon.style.strokeWidth = '1'
+    
+    // Apply blur effect to undiscovered hexes
+    if (view === 'castle' && customHex.visibility === 'undiscovered') {
+      group.classList.add('hex-undiscovered')
     }
-
-    hexGroup.appendChild(polygon)
-
-    // Add coordinate text
-    if (showCoordinates) {
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-      text.setAttribute('x', '0')
-      text.setAttribute('y', '0')
-      text.setAttribute('text-anchor', 'middle')
-      text.setAttribute('dominant-baseline', 'central')
-      text.style.fontSize = '12px'
-      text.style.fill = 'white'
-      text.style.fontWeight = 'bold'
-      text.style.userSelect = 'none'
-      text.style.pointerEvents = 'none'
-
-      if (view === 'castle') {
-        // Show ring/position format for castle view
-        if (customHex.radialDistance === 0) {
-          text.textContent = '0'
-        } else {
-          text.textContent = `${customHex.radialDistance}/${customHex.ringPosition}`
-        }
-        text.style.fill = '#FFFF00' // Yellow for castle view
+    
+    group.appendChild(polygon)
+    
+    // Add number text (centered vertically) with 20% transparency
+    const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    
+    // Use ring/position format for castle view, regular index for others
+    if (view === 'castle' && customHex.radialDistance !== undefined && customHex.ringPosition !== undefined) {
+      if (customHex.radialDistance === 0) {
+        numberText.textContent = '0' // Center castle
       } else {
-        // Show index for other views
-        text.textContent = index.toString()
-        text.style.fill = 'white'
+        numberText.textContent = `${customHex.radialDistance}/${customHex.ringPosition}`
       }
-
-      hexGroup.appendChild(text)
+      numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
+      numberText.style.fontWeight = 'bold'
+    } else {
+      numberText.textContent = `${index}`
+      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'  // White with 20% transparency
     }
-
-    // Add terrain emoji for castle view
+    
+    numberText.setAttribute('x', hex.x.toString())
+    numberText.setAttribute('y', hex.y.toString()) // Centered vertically
+    numberText.setAttribute('text-anchor', 'middle')
+    numberText.setAttribute('dominant-baseline', 'central')
+    numberText.style.fontSize = '0.8rem' // Smaller font size
+    numberText.style.userSelect = 'none'
+    numberText.style.pointerEvents = 'none'
+    
+    group.appendChild(numberText)
+    
+    // Add terrain emoji if coordinates are enabled and in castle view
     if (view === 'castle' && showCoordinates && shouldShowButtonEffects(customHex.radialDistance)) {
       const terrainText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
       const terrainType = getTerrainType(index, customHex.radialDistance)
       const emoji = getTerrainEmoji(terrainType)
       
-      terrainText.setAttribute('x', '0')
-      terrainText.setAttribute('y', '15')
+      // Make castle emoji bigger
+      if (terrainType.type === 'Castle') {
+        terrainText.textContent = emoji
+        terrainText.style.fontSize = '2.5rem' // Bigger castle emoji
+      } else {
+        terrainText.textContent = emoji
+        terrainText.style.fontSize = '2rem' // Bigger terrain emojis
+      }
+      
+      terrainText.setAttribute('x', hex.x.toString())
+      terrainText.setAttribute('y', (hex.y + 15).toString()) // Offset down more
       terrainText.setAttribute('text-anchor', 'middle')
       terrainText.setAttribute('dominant-baseline', 'central')
-      terrainText.style.fontSize = '16px'
       terrainText.style.userSelect = 'none'
       terrainText.style.pointerEvents = 'none'
-      terrainText.classList.add('terrain-text')
-      terrainText.textContent = emoji
-
-      hexGroup.appendChild(terrainText)
+      
+      group.appendChild(terrainText)
     }
-
-    mainGridGroup.appendChild(hexGroup)
+    
+    mainGridGroup.appendChild(group)
     index++
   }
 
-  container.appendChild(svg)
+  // Render fog of war overlay (separate from main grid)
+  if (view === 'castle' && showVisibility) {
+    let overlayIndex = 0
+    for (const hex of mainGrid) {
+      const customHex = hex as CustomHex | VerticalHex
+      
+      // Skip rendering hexes with radial distance 6 or 7 in castle view
+      if (shouldHideHex(customHex.radialDistance)) {
+        overlayIndex++
+        continue
+      }
+      
+      // Only render fog overlay for hexes that should show button effects
+      if (shouldShowButtonEffects(customHex.radialDistance)) {
+        const fogGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        const points = hex.corners.map(({ x, y }) => `${x},${y}`).join(' ')
+        
+        overlay.setAttribute('points', points)
+        
+        if (customHex.visibility === 'undiscovered') {
+          // Ring 5 - Dark (undiscovered) with stroke styling
+          overlay.style.fill = '#000000eb'
+          overlay.style.stroke = '#00000094'
+          overlay.style.strokeWidth = '29px'
+        } else if (customHex.visibility === 'discovered') {
+          // Rings 2-3-4 - transparency 100% (discovered) - completely transparent
+          overlay.style.fill = 'rgba(0, 0, 0, 0)'
+          overlay.style.stroke = 'none'
+        } else if (customHex.visibility === 'visible') {
+          // Other rings - visible (light overlay)
+          overlay.style.fill = 'rgba(255, 255, 255, 0.2)'
+          overlay.style.stroke = 'none'
+        }
+        
+        fogGroup.appendChild(overlay)
+        fogOverlayGroup.appendChild(fogGroup)
+      }
+      
+      overlayIndex++
+    }
+  }
 
   setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
 }
 
-function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: number, gridHeight: number) {
+function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
+  const cameraState = {
+    matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
+    isDragging: false,
+    lastX: 0,
+    lastY: 0,
+    lastDistance: 0
+  }
+
   function updateTransform() {
-    updateCameraMatrix()
     svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
   }
 
@@ -472,25 +1005,11 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: nu
   function handleMove(x: number, y: number) {
     if (!cameraState.isDragging) return
 
-    const deltaX = x - cameraState.lastX
-    const deltaY = y - cameraState.lastY
+    const deltaX = (x - cameraState.lastX) * 0.5
+    const deltaY = (y - cameraState.lastY) * 0.5
 
-    if (currentView === 'castle') {
-      // 3D rotation for castle view
-      cameraState.rotationY += deltaX * 0.01
-      cameraState.rotationX += deltaY * 0.01
-
-      // Limit rotation
-      cameraState.rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 6, cameraState.rotationX))
-      
-      // Also update translation for panning
-      cameraState.translateX += deltaX * 0.5
-      cameraState.translateY += deltaY * 0.5
-    } else {
-      // 2D panning for other views
-      cameraState.translateX += deltaX
-      cameraState.translateY += deltaY
-    }
+    cameraState.matrix[12] += deltaX
+    cameraState.matrix[13] += deltaY
 
     updateTransform()
 
@@ -498,32 +1017,31 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: nu
     cameraState.lastY = y
   }
 
+  function handlePinch(e: TouchEvent) {
+    if (e.touches.length !== 2) return
+
+    const touch1 = e.touches[0]
+    const touch2 = e.touches[1]
+    const distance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    )
+
+    if (cameraState.lastDistance) {
+      const delta = (distance - cameraState.lastDistance) * 0.01
+      cameraState.matrix[0] = Math.max(0.5, Math.min(2, cameraState.matrix[0] + delta))
+      cameraState.matrix[5] = Math.max(0.5, Math.min(2, cameraState.matrix[5] + delta))
+      updateTransform()
+    }
+
+    cameraState.lastDistance = distance
+  }
+
   function handleEnd() {
     cameraState.isDragging = false
+    cameraState.lastDistance = 0
   }
 
-  function handleWheel(event: WheelEvent) {
-    event.preventDefault()
-    
-    const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
-    cameraState.scale = Math.max(0.1, Math.min(3, cameraState.scale * scaleFactor))
-    
-    updateTransform()
-  }
-
-  // Mouse events
-  svg.addEventListener('mousedown', (e) => {
-    e.preventDefault()
-    handleStart(e.clientX, e.clientY)
-  })
-
-  document.addEventListener('mousemove', (e) => {
-    handleMove(e.clientX, e.clientY)
-  })
-
-  document.addEventListener('mouseup', handleEnd)
-
-  // Touch events
   svg.addEventListener('touchstart', (e) => {
     e.preventDefault()
     if (e.touches.length === 1) {
@@ -535,6 +1053,8 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: nu
     e.preventDefault()
     if (e.touches.length === 1) {
       handleMove(e.touches[0].clientX, e.touches[0].clientY)
+    } else if (e.touches.length === 2) {
+      handlePinch(e)
     }
   })
 
@@ -543,17 +1063,187 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: nu
     handleEnd()
   })
 
-  // Wheel events
-  svg.addEventListener('wheel', handleWheel)
+  svg.addEventListener('touchcancel', (e) => {
+    e.preventDefault()
+    handleEnd()
+  })
 
-  // Handle window resize
+  svg.addEventListener('mousedown', (e) => {
+    handleStart(e.clientX, e.clientY)
+  })
+
+  svg.addEventListener('mousemove', (e) => {
+    handleMove(e.clientX, e.clientY)
+  })
+
+  svg.addEventListener('mouseup', handleEnd)
+  svg.addEventListener('mouseleave', handleEnd)
+
   window.addEventListener('resize', () => {
-    const gridWidth = mainGrid.pixelWidth
-    const gridHeight = mainGrid.pixelHeight
+    const newXOffset = (window.innerWidth - gridWidth) / 2
+    const newYOffset = (window.innerHeight - gridHeight) / 2
+    
+    const mainGridGroup = document.getElementById('main-grid')
+    const fogOverlayGroup = document.getElementById('fog-overlay')
+    
+    if (mainGridGroup) {
+      mainGridGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    }
+    
+    if (fogOverlayGroup) {
+      fogOverlayGroup.setAttribute('transform', `translate(${newXOffset}, ${newYOffset})`)
+    }
     
     svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   })
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', init)
+// Setup button functionality
+document.addEventListener('DOMContentLoaded', () => {
+  const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+  const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+  const burgerMenu = document.getElementById('burger-menu') as HTMLButtonElement
+  const menuOverlay = document.getElementById('menu-overlay') as HTMLDivElement
+  const closeMenu = document.getElementById('close-menu') as HTMLButtonElement
+  
+  // Burger menu functionality
+  if (burgerMenu && menuOverlay && closeMenu) {
+    const openMenu = () => {
+      menuOverlay.classList.add('active')
+      burgerMenu.classList.add('active')
+      document.body.style.overflow = 'hidden'
+    }
+    
+    const closeMenuFunc = () => {
+      menuOverlay.classList.remove('active')
+      burgerMenu.classList.remove('active')
+      document.body.style.overflow = ''
+    }
+    
+    burgerMenu.addEventListener('click', openMenu)
+    burgerMenu.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      openMenu()
+    })
+    
+    closeMenu.addEventListener('click', closeMenuFunc)
+    closeMenu.addEventListener('touchend', (e) => {
+      e.preventDefault()
+      closeMenuFunc()
+    })
+    
+    // Close menu when clicking overlay background
+    menuOverlay.addEventListener('click', (e) => {
+      if (e.target === menuOverlay) {
+        closeMenuFunc()
+      }
+    })
+    
+    // Handle menu item clicks
+    const menuItems = menuOverlay.querySelectorAll('.menu-item[data-view]')
+    menuItems.forEach(item => {
+      const handleMenuClick = (e: Event) => {
+        e.preventDefault()
+        const view = (item as HTMLElement).dataset.view
+        if (view) {
+          currentView = view
+          // Reset states when switching views
+          showCoordinates = false
+          showVisibility = false
+          currentLibraryContent = null
+          // Reset button states
+          if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+          if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+          initializeGrid(view)
+          closeMenuFunc()
+        }
+      }
+      
+      item.addEventListener('click', handleMenuClick)
+      item.addEventListener('touchend', handleMenuClick)
+    })
+  }
+  
+  if (coordinatesToggle) {
+    coordinatesToggle.addEventListener('click', () => {
+      showCoordinates = !showCoordinates
+      coordinatesToggle.style.background = showCoordinates ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
+      // Re-render the grid to show/hide terrain emojis
+      if (currentView === 'castle') {
+        renderGrid(currentView)
+      }
+    })
+  }
+
+  if (visibilityToggle) {
+    visibilityToggle.addEventListener('click', () => {
+      showVisibility = !showVisibility
+      visibilityToggle.style.background = showVisibility ? 'rgba(255, 255, 255, 0.3)' : 'transparent'
+      // Re-render the grid to show/hide visibility overlays
+      if (currentView === 'castle') {
+        renderGrid(currentView)
+      }
+    })
+  }
+})
+
+// Setup navigation for all buttons (nav-button, nav-circle, and nav-tab-button)
+document.addEventListener('click', (e) => {
+  const target = e.target as HTMLElement
+  
+  // Handle nav-button, nav-circle, and nav-tab-button clicks
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle') || target.classList.contains('nav-tab-button')) {
+    e.preventDefault()
+    const view = target.dataset.view
+    if (view) {
+      // Update active state for nav-buttons only
+      if (target.classList.contains('nav-button')) {
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
+        target.classList.add('active')
+      }
+      
+      currentView = view
+      // Reset states when switching views
+      showCoordinates = false
+      showVisibility = false
+      currentLibraryContent = null
+      // Reset button states
+      const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+      const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+      if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+      if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+      initializeGrid(view)
+    }
+  }
+})
+
+// Setup touch events for mobile
+document.addEventListener('touchend', (e) => {
+  const target = e.target as HTMLElement
+  
+  if (target.classList.contains('nav-button') || target.classList.contains('nav-circle') || target.classList.contains('nav-tab-button')) {
+    e.preventDefault()
+    const view = target.dataset.view
+    if (view) {
+      // Update active state for nav-buttons only
+      if (target.classList.contains('nav-button')) {
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'))
+        target.classList.add('active')
+      }
+      
+      currentView = view
+      // Reset states when switching views
+      showCoordinates = false
+      showVisibility = false
+      currentLibraryContent = null
+      // Reset button states
+      const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
+      const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
+      if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
+      if (visibilityToggle) visibilityToggle.style.background = 'transparent'
+      initializeGrid(view)
+    }
+  }
+})
+
+initializeGrid('dungeon')
