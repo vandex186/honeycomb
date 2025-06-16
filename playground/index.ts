@@ -13,7 +13,6 @@ class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
   radialDistance?: number
-  ringPosition?: number // New property for position within ring
 }
 
 class VerticalHex extends defineHex({ 
@@ -25,7 +24,6 @@ class VerticalHex extends defineHex({
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
   radialDistance?: number
-  ringPosition?: number // New property for position within ring
 }
 
 // Grid state
@@ -35,43 +33,7 @@ let showCoordinates = false
 let showVisibility = false
 let currentLibraryContent: string | null = null
 
-// New terrain types based on the reference image
-const FIELDS = {
-  type: 'Fields',
-  passable: true,
-  opaque: false,
-}
-
-const NORTH_FOREST = {
-  type: 'North Forest',
-  passable: false,
-  opaque: true,
-}
-
-const FOREST = {
-  type: 'Forest',
-  passable: false,
-  opaque: true,
-}
-
-const COAST = {
-  type: 'Coast',
-  passable: true,
-  opaque: false,
-}
-
-const DEEP_BLUE = {
-  type: 'Deep Blue',
-  passable: false,
-  opaque: false,
-}
-
-const STEPPO = {
-  type: 'Steppo',
-  passable: true,
-  opaque: false,
-}
-
+// New Castle terrain type
 const CASTLE = {
   type: 'Castle',
   passable: false,
@@ -356,42 +318,6 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
     Math.abs(fromR - toR),
     Math.abs(fromS - toS)
   )
-}
-
-// Calculate position within ring for a hex
-function calculateRingPosition(hexIndex: number, gridWidth: number, gridHeight: number, centerIndex: number, radialDistance: number): number {
-  if (radialDistance === 0) return 0 // Center hex
-  
-  // Convert linear index to grid coordinates
-  const row = Math.floor(hexIndex / gridWidth)
-  const col = hexIndex % gridWidth
-  const centerRow = Math.floor(centerIndex / gridWidth)
-  const centerCol = centerIndex % gridWidth
-  
-  // Convert to axial coordinates
-  const q = col - Math.floor(row / 2)
-  const r = row
-  const centerQ = centerCol - Math.floor(centerRow / 2)
-  const centerR = centerRow
-  
-  // Calculate relative position from center
-  const relativeQ = q - centerQ
-  const relativeR = r - centerR
-  
-  // For ring positioning, we'll use a simple angle-based approach
-  // Calculate angle from center to this hex
-  const angle = Math.atan2(relativeR, relativeQ)
-  
-  // Convert angle to position (0-based)
-  // Normalize angle to 0-2π range
-  const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle
-  
-  // Calculate approximate position based on ring size
-  // Ring size is approximately 6 * radialDistance for hex grids
-  const ringSize = radialDistance === 1 ? 6 : 6 * radialDistance
-  const position = Math.floor((normalizedAngle / (2 * Math.PI)) * ringSize) + 1
-  
-  return Math.min(position, ringSize) // Ensure we don't exceed ring size
 }
 
 function updateAvatarContent(view: string) {
@@ -719,7 +645,7 @@ function initializeGrid(view: string) {
 
   mainGrid = createGrid(gridOptions)
   
-  // Calculate radial distances and ring positions for castle view
+  // Calculate radial distances and initialize visibility for castle view (formerly chart)
   if (view === 'castle') {
     // Castle is now at the center of the 11x11 grid
     const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
@@ -727,7 +653,6 @@ function initializeGrid(view: string) {
     for (const hex of mainGrid) {
       const customHex = hex as CustomHex | VerticalHex
       customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
-      customHex.ringPosition = calculateRingPosition(index, gridOptions.width, gridOptions.height, castleIndex, customHex.radialDistance)
       
       // Set visibility based on ring distance
       if (customHex.radialDistance === 5) {
@@ -747,12 +672,11 @@ function initializeGrid(view: string) {
 
 function getTerrainEmoji(terrain: any) {
   switch(terrain.type) {
-    case 'Deep Blue': return '🌊'
-    case 'Fields': return '🌾'
-    case 'Coast': return '🏖️'
-    case 'Forest': return '🌲'
-    case 'North Forest': return '🌲'
-    case 'Steppo': return '🌿'
+    case 'Water': return '💧'
+    case 'Field': return '🌾'
+    case 'Road': return '🪨'
+    case 'Trees': return '🌳'
+    case 'Building': return '🏠'
     case 'Castle': return '🏰'
     default: return ''
   }
@@ -762,13 +686,13 @@ function getTerrainType(index: number, radialDistance?: number) {
   // For castle view (formerly chart), use ring-based terrain assignment
   if (radialDistance !== undefined) {
     switch (radialDistance) {
-      case 0: return CASTLE        // Center - Castle
-      case 1: return FIELDS        // Ring 1 - Fields around castle
-      case 2: return FOREST        // Ring 2 - Forest
-      case 3: return NORTH_FOREST  // Ring 3 - North Forest (darker)
-      case 4: return COAST         // Ring 4 - Coast
-      case 5: return DEEP_BLUE     // Ring 5 - Deep Blue (outer ring)
-      default: return STEPPO       // Fallback - Steppo
+      case 0: return CASTLE  // Center - Castle
+      case 1: return FIELD   // Ring 1 - Fields around castle
+      case 2: return FIELD   // Ring 2 - All fields
+      case 3: return TREES   // Ring 3 - All forest
+      case 4: return WATER   // Ring 4 - All water
+      case 5: return TREES   // Ring 5 - All forest (outer ring)
+      default: return FIELD  // Fallback
     }
   }
   
@@ -779,22 +703,21 @@ function getTerrainType(index: number, radialDistance?: number) {
   
   // Specific field hexes: 27, 28, 37, 44, 43, 35
   if ([27, 28, 37, 44, 43, 35].includes(index)) {
-    return FIELDS
+    return FIELD
   }
   
-  const terrains = [FIELDS, COAST, FOREST, NORTH_FOREST, DEEP_BLUE, STEPPO]
+  const terrains = [FIELD, WATER, TREES, BUILDING, ROAD]
   return terrains[index % terrains.length]
 }
 
 function getTerrainColor(terrain: any): string {
   switch(terrain.type) {
-    case 'Fields': return '#FFD700'        // Bright yellow for fields
-    case 'North Forest': return '#1B4332'  // Dark green for north forest
-    case 'Forest': return '#2D5016'        // Medium green for forest
-    case 'Coast': return '#4A90E2'         // Light blue for coast
-    case 'Deep Blue': return '#1E3A8A'     // Dark blue for deep water
-    case 'Steppo': return '#8B7355'        // Brown/olive for steppo
-    case 'Castle': return '#8B0000'        // Dark red for castle
+    case 'Building': return '#616161'
+    case 'Road': return '#181818'
+    case 'Trees': return '#11580f'
+    case 'Field': return '#009221'  // New green color for fields
+    case 'Water': return '#0d73c9'
+    case 'Castle': return '#ff0000'  // Red color for castle
     default: return '#ffffff'
   }
 }
@@ -884,13 +807,9 @@ function renderGrid(view: string) {
     // Add number text (centered vertically) with 20% transparency
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
-    // Use ring/position format for castle view, regular index for others
-    if (view === 'castle' && customHex.radialDistance !== undefined && customHex.ringPosition !== undefined) {
-      if (customHex.radialDistance === 0) {
-        numberText.textContent = '0' // Center castle
-      } else {
-        numberText.textContent = `${customHex.radialDistance}/${customHex.ringPosition}`
-      }
+    // Use radial distance for castle view, regular index for others
+    if (view === 'castle' && customHex.radialDistance !== undefined) {
+      numberText.textContent = `${customHex.radialDistance}`
       numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
       numberText.style.fontWeight = 'bold'
     } else {
