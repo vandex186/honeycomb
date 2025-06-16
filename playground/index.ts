@@ -2,7 +2,7 @@ import { defineHex, Grid, rectangle, spiral, ring } from '../src'
 
 // Define terrain types with colors and emojis
 const TERRAIN_TYPES = {
-  CASTLE: { color: '#8B4513', emoji: '🏰', name: 'Castle' },
+  CASTLE: { color: '#8B4513', emoji: '🛖', name: 'Castle' },
   FIELDS: { color: '#FFD700', emoji: '🌾', name: 'Fields' },
   FOREST: { color: '#2D5016', emoji: '🌲', name: 'Forest' },
   NORTH_FOREST: { color: '#1B4332', emoji: '🌲', name: 'North Forest' },
@@ -36,6 +36,19 @@ let currentView: string = 'castle'
 let showCoordinates = false
 let showVisibility = false
 let mainGrid: Grid<CustomHex | VerticalHex>
+
+// Camera state for 3D transformations
+const cameraState = {
+  matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
+  isDragging: false,
+  lastX: 0,
+  lastY: 0,
+  rotationX: 0,
+  rotationY: 0,
+  scale: 1,
+  translateX: 0,
+  translateY: 0
+}
 
 // Initialize the application
 function init() {
@@ -423,6 +436,14 @@ function renderGrid(view: string) {
   const xOffset = (window.innerWidth - gridWidth) / 2
   const yOffset = (window.innerHeight - gridHeight) / 2
 
+  // Apply 3D transformation for castle view
+  if (view === 'castle') {
+    svg.style.transformStyle = 'preserve-3d'
+    svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
+  } else {
+    svg.style.transform = 'none'
+  }
+
   // Create legend for castle view
   if (view === 'castle') {
     createLegend(container)
@@ -492,6 +513,8 @@ function renderGrid(view: string) {
   }
 
   container.appendChild(svg)
+
+  setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
 }
 
 // Create legend for terrain types
@@ -538,6 +561,136 @@ function createLegend(container: HTMLElement) {
   })
 
   container.appendChild(legend)
+}
+
+// Set up 3D interactions for castle view
+function setupInteractions(svg: SVGElement, gridGroup: SVGElement, gridWidth: number, gridHeight: number) {
+  if (currentView !== 'castle') return
+
+  function updateTransform() {
+    svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
+  }
+
+  function handleStart(x: number, y: number) {
+    cameraState.isDragging = true
+    cameraState.lastX = x
+    cameraState.lastY = y
+  }
+
+  function handleMove(x: number, y: number) {
+    if (!cameraState.isDragging) return
+
+    const deltaX = x - cameraState.lastX
+    const deltaY = y - cameraState.lastY
+
+    // Update rotation
+    cameraState.rotationY += deltaX * 0.01
+    cameraState.rotationX += deltaY * 0.01
+
+    // Clamp rotation
+    cameraState.rotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 6, cameraState.rotationX))
+
+    // Update matrix
+    const cosX = Math.cos(cameraState.rotationX)
+    const sinX = Math.sin(cameraState.rotationX)
+    const cosY = Math.cos(cameraState.rotationY)
+    const sinY = Math.sin(cameraState.rotationY)
+
+    cameraState.matrix = [
+      cosY * cameraState.scale, 
+      sinY * sinX * cameraState.scale, 
+      0, 
+      0,
+      0, 
+      cosX * cameraState.scale * 0.4, 
+      0, 
+      -0.002,
+      sinY * cameraState.scale, 
+      -cosY * sinX * cameraState.scale, 
+      1, 
+      0,
+      cameraState.translateX, 
+      cameraState.translateY, 
+      0, 
+      1
+    ]
+
+    updateTransform()
+
+    cameraState.lastX = x
+    cameraState.lastY = y
+  }
+
+  function handleEnd() {
+    cameraState.isDragging = false
+  }
+
+  function handleWheel(event: WheelEvent) {
+    event.preventDefault()
+    
+    const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
+    cameraState.scale = Math.max(0.5, Math.min(3, cameraState.scale * scaleFactor))
+    
+    // Update matrix with new scale
+    const cosX = Math.cos(cameraState.rotationX)
+    const sinX = Math.sin(cameraState.rotationX)
+    const cosY = Math.cos(cameraState.rotationY)
+    const sinY = Math.sin(cameraState.rotationY)
+
+    cameraState.matrix = [
+      cosY * cameraState.scale, 
+      sinY * sinX * cameraState.scale, 
+      0, 
+      0,
+      0, 
+      cosX * cameraState.scale * 0.4, 
+      0, 
+      -0.002,
+      sinY * cameraState.scale, 
+      -cosY * sinX * cameraState.scale, 
+      1, 
+      0,
+      cameraState.translateX, 
+      cameraState.translateY, 
+      0, 
+      1
+    ]
+
+    updateTransform()
+  }
+
+  // Mouse events
+  svg.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY))
+  svg.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY))
+  svg.addEventListener('mouseup', handleEnd)
+  svg.addEventListener('mouseleave', handleEnd)
+  svg.addEventListener('wheel', handleWheel)
+
+  // Touch events
+  svg.addEventListener('touchstart', (e) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    handleStart(touch.clientX, touch.clientY)
+  })
+
+  svg.addEventListener('touchmove', (e) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    handleMove(touch.clientX, touch.clientY)
+  })
+
+  svg.addEventListener('touchend', (e) => {
+    e.preventDefault()
+    handleEnd()
+  })
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    const newGridWidth = mainGrid.pixelWidth
+    const newGridHeight = mainGrid.pixelHeight
+    
+    svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+  })
 }
 
 // Initialize the application when DOM is loaded
