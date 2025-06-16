@@ -134,9 +134,9 @@ function createInteractiveLayer() {
       .move(hex.x - 30, hex.y + 10) // Position at bottom of hex
       .addClass('central-hex-text')
     
-    // Add HTML content to text container
-    textContainer.add('xhtml', `
-      <div style="
+    // Add HTML content to text container with proper namespace
+    textContainer.add(`
+      <div xmlns="http://www.w3.org/1999/xhtml" style="
         width: 60px; 
         height: 30px; 
         display: flex; 
