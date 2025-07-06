@@ -13,6 +13,7 @@ class CustomHex extends defineHex({ dimensions: 30, origin: 'topLeft' }) {
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
   radialDistance?: number
+  ringPosition?: number // Position in the ring (clockwise from right of castle)
 }
 
 class VerticalHex extends defineHex({ 
@@ -24,6 +25,7 @@ class VerticalHex extends defineHex({
   transformedCoordinates?: { x: number; y: number }
   visibility: 'undiscovered' | 'discovered' | 'visible' = 'undiscovered'
   radialDistance?: number
+  ringPosition?: number // Position in the ring (clockwise from right of castle)
 }
 
 // Grid state
@@ -32,6 +34,7 @@ let currentView = 'dungeon'
 let showCoordinates = false
 let showVisibility = false
 let currentLibraryContent: string | null = null
+let mapRotation = 0 // Track map rotation in degrees
 
 // New Castle terrain type
 const CASTLE = {
@@ -294,8 +297,8 @@ function createGrid(options: GridOptions) {
   return new Grid(HexClass, rectangle({ width: options.width, height: options.height }))
 }
 
-// Calculate radial distance from castle hex (center)
-function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: number): number {
+// Calculate radial distance from castle hex (center) and ring position
+function calculateRadialDistanceAndPosition(fromIndex: number, toIndex: number, gridWidth: number): { distance: number, position: number } {
   // Convert linear index to grid coordinates
   const fromRow = Math.floor(fromIndex / gridWidth)
   const fromCol = fromIndex % gridWidth
@@ -313,11 +316,36 @@ function calculateRadialDistance(fromIndex: number, toIndex: number, gridWidth: 
   const toS = -toQ - toR
   
   // Calculate distance using cube coordinates
-  return Math.max(
+  const distance = Math.max(
     Math.abs(fromQ - toQ),
     Math.abs(fromR - toR),
     Math.abs(fromS - toS)
   )
+  
+  // Calculate position in ring (clockwise from right of castle)
+  let position = 0
+  if (distance > 0) {
+    // Calculate angle from castle to hex (in radians)
+    const deltaQ = toQ - fromQ
+    const deltaR = toR - fromR
+    
+    // Convert to pixel coordinates for angle calculation
+    const x = deltaQ + deltaR * 0.5
+    const y = deltaR * Math.sqrt(3) * 0.5
+    
+    // Calculate angle (0 = right, positive = clockwise)
+    let angle = Math.atan2(y, x)
+    
+    // Convert to degrees and normalize to 0-360
+    angle = (angle * 180 / Math.PI + 360) % 360
+    
+    // Convert to position in ring (starting from right, going clockwise)
+    // Each hex in a ring of distance d has 6*d positions total
+    const totalPositions = 6 * distance
+    position = Math.round((360 - angle) / 360 * totalPositions) % totalPositions + 1
+  }
+  
+  return { distance, position }
 }
 
 function updateAvatarContent(view: string) {
@@ -644,14 +672,16 @@ function initializeGrid(view: string) {
 
   mainGrid = createGrid(gridOptions)
   
-  // Calculate radial distances and initialize visibility for castle view (formerly chart)
+  // Calculate radial distances and ring positions for castle view
   if (view === 'castle') {
     // Castle is now at the center of the 11x11 grid
     const castleIndex = Math.floor((gridOptions.width * gridOptions.height) / 2) // Center hex
     let index = 0
     for (const hex of mainGrid) {
       const customHex = hex as CustomHex | VerticalHex
-      customHex.radialDistance = calculateRadialDistance(index, castleIndex, gridOptions.width)
+      const { distance, position } = calculateRadialDistanceAndPosition(index, castleIndex, gridOptions.width)
+      customHex.radialDistance = distance
+      customHex.ringPosition = position
       
       // Set visibility based on ring distance
       if (customHex.radialDistance === 5) {
@@ -731,6 +761,12 @@ function shouldShowButtonEffects(radialDistance?: number): boolean {
   return radialDistance !== undefined && radialDistance <= 5
 }
 
+// Convert radial distance to letter (0=Castle, 1=A, 2=B, etc.)
+function getCircleLetter(radialDistance: number): string {
+  if (radialDistance === 0) return 'Castle'
+  return String.fromCharCode(64 + radialDistance) // A=65, B=66, etc.
+}
+
 function renderGrid(view: string) {
   const container = document.getElementById('container')
   if (!container) return
@@ -749,7 +785,8 @@ function renderGrid(view: string) {
   svg.setAttribute('height', '100%')
   svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
   svg.classList.add('hex-grid')
-  svg.style.transform = 'matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1)'
+  svg.style.transform = `matrix3d(1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1) rotate(${mapRotation}deg)`
+  svg.style.transformOrigin = 'center'
   container.appendChild(svg)
 
   // Main grid group (with 3D transformation)
@@ -803,24 +840,32 @@ function renderGrid(view: string) {
     
     group.appendChild(polygon)
     
-    // Add number text (centered vertically) with 20% transparency
+    // Add alphabetical numbering for castle view
     const numberText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
     
-    // Use radial distance for castle view, regular index for others
-    if (view === 'castle' && customHex.radialDistance !== undefined) {
-      numberText.textContent = `${customHex.radialDistance}`
-      numberText.style.fill = 'rgba(255, 255, 0, 0.8)'  // Yellow with 20% transparency
+    if (view === 'castle' && customHex.radialDistance !== undefined && customHex.ringPosition !== undefined) {
+      if (customHex.radialDistance === 0) {
+        // Castle center
+        numberText.textContent = '🏰'
+        numberText.style.fontSize = '2rem'
+      } else {
+        // Ring hexes with alphabetical + position numbering
+        const letter = getCircleLetter(customHex.radialDistance)
+        numberText.textContent = `${letter}${customHex.ringPosition}`
+        numberText.style.fontSize = '0.7rem'
+      }
+      numberText.style.fill = 'rgba(255, 255, 0, 0.9)'
       numberText.style.fontWeight = 'bold'
     } else {
       numberText.textContent = `${index}`
-      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'  // White with 20% transparency
+      numberText.style.fill = 'rgba(255, 255, 255, 0.8)'
+      numberText.style.fontSize = '0.8rem'
     }
     
     numberText.setAttribute('x', hex.x.toString())
-    numberText.setAttribute('y', hex.y.toString()) // Centered vertically
+    numberText.setAttribute('y', hex.y.toString())
     numberText.setAttribute('text-anchor', 'middle')
     numberText.setAttribute('dominant-baseline', 'central')
-    numberText.style.fontSize = '0.8rem' // Smaller font size
     numberText.style.userSelect = 'none'
     numberText.style.pointerEvents = 'none'
     
@@ -907,11 +952,12 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
     isDragging: false,
     lastX: 0,
     lastY: 0,
-    lastDistance: 0
+    lastDistance: 0,
+    isRotating: false
   }
 
   function updateTransform() {
-    svg.style.transform = `matrix3d(${cameraState.matrix.join(',')})`
+    svg.style.transform = `matrix3d(${cameraState.matrix.join(',')}) rotate(${mapRotation}deg)`
   }
 
   function handleStart(x: number, y: number) {
@@ -923,13 +969,26 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
   function handleMove(x: number, y: number) {
     if (!cameraState.isDragging) return
 
-    const deltaX = (x - cameraState.lastX) * 0.5
-    const deltaY = (y - cameraState.lastY) * 0.5
+    const deltaX = x - cameraState.lastX
+    const deltaY = y - cameraState.lastY
 
-    cameraState.matrix[12] += deltaX
-    cameraState.matrix[13] += deltaY
+    // Check if this is a horizontal swipe (for rotation in castle view)
+    if (currentView === 'castle' && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+      // Horizontal swipe - rotate map
+      cameraState.isRotating = true
+      mapRotation += deltaX * 0.5 // Adjust rotation sensitivity
+      mapRotation = mapRotation % 360 // Keep rotation between 0-360
+      updateTransform()
+    } else if (!cameraState.isRotating) {
+      // Regular pan movement
+      const adjustedDeltaX = deltaX * 0.5
+      const adjustedDeltaY = deltaY * 0.5
 
-    updateTransform()
+      cameraState.matrix[12] += adjustedDeltaX
+      cameraState.matrix[13] += adjustedDeltaY
+
+      updateTransform()
+    }
 
     cameraState.lastX = x
     cameraState.lastY = y
@@ -957,6 +1016,7 @@ function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: n
 
   function handleEnd() {
     cameraState.isDragging = false
+    cameraState.isRotating = false
     cameraState.lastDistance = 0
   }
 
@@ -1069,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showCoordinates = false
           showVisibility = false
           currentLibraryContent = null
+          mapRotation = 0 // Reset rotation when switching views
           // Reset button states
           if (coordinatesToggle) coordinatesToggle.style.background = 'transparent'
           if (visibilityToggle) visibilityToggle.style.background = 'transparent'
@@ -1125,6 +1186,7 @@ document.addEventListener('click', (e) => {
       showCoordinates = false
       showVisibility = false
       currentLibraryContent = null
+      mapRotation = 0 // Reset rotation when switching views
       // Reset button states
       const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
       const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
@@ -1154,6 +1216,7 @@ document.addEventListener('touchend', (e) => {
       showCoordinates = false
       showVisibility = false
       currentLibraryContent = null
+      mapRotation = 0 // Reset rotation when switching views
       // Reset button states
       const coordinatesToggle = document.getElementById('coordinates-toggle') as HTMLButtonElement
       const visibilityToggle = document.getElementById('visibility-toggle') as HTMLButtonElement
