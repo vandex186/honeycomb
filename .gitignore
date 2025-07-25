@@ -24,3 +24,8 @@ docs/.vitepress/cache
 *.njsproj
 *.sln
 *.sw?
+
+# Gitpod
+.gitpod/
+.vite/
+.npm-cache/
