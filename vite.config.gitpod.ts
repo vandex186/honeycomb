@@ -5,6 +5,15 @@ import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Gitpod-specific configuration
+const isGitpod = !!process.env.GITPOD_WORKSPACE_URL;
+const gitpodHost = process.env.GITPOD_WORKSPACE_URL;
+
+console.log('🔧 Gitpod Environment Detection:');
+console.log(`   - Is Gitpod: ${isGitpod}`);
+console.log(`   - Workspace URL: ${gitpodHost}`);
+console.log(`   - Workspace Context: ${process.env.GITPOD_WORKSPACE_CONTEXT_URL}`);
+
 export default defineConfig({
   server: {
     host: true,
@@ -13,7 +22,7 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
-    allowedHosts: process.env.GITPOD_WORKSPACE_URL ? [process.env.GITPOD_WORKSPACE_URL] : ['5173-vandex186-honeycomb-t0d5g9h8jae.ws-us120.gitpod.io'],
+    allowedHosts: isGitpod && gitpodHost ? [gitpodHost] : 'all',
   },
   build: {
     target: 'esnext',
@@ -23,4 +32,4 @@ export default defineConfig({
     },
   },
   plugins: [dts({ tsconfigPath: 'tsconfig.build.json' })],
-});
+}); 

@@ -57,10 +57,12 @@ RUN git config --global init.defaultBranch main && \
 # Set working directory
 WORKDIR /workspace
 
-# Optimize shell startup
+# Optimize shell startup and Gitpod environment
 RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc && \
     echo 'export NPM_CONFIG_CACHE="/workspace/.npm-cache"' >> ~/.bashrc && \
-    echo 'export VITE_CACHE_DIR="/workspace/.vite"' >> ~/.bashrc
+    echo 'export VITE_CACHE_DIR="/workspace/.vite"' >> ~/.bashrc && \
+    echo 'export GITPOD_WORKSPACE_URL="$GITPOD_WORKSPACE_URL"' >> ~/.bashrc && \
+    echo 'export GITPOD_WORKSPACE_CONTEXT_URL="$GITPOD_WORKSPACE_CONTEXT_URL"' >> ~/.bashrc
 
 # Expose common development ports
 EXPOSE 5173 4173 3000 8080
