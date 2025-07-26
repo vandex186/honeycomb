@@ -27,5 +27,3 @@ docs/.vitepress/cache
 
 # Gitpod
 .gitpod/
-.vite/
-.npm-cache/

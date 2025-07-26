@@ -5,7 +5,7 @@ image:
 # Ports to expose
 ports:
   - port: 5173
-    onOpen: open-browser
+    onOpen: open
     name: "Vite Dev Server"
     description: "Development server for the application"
   - port: 4173
@@ -19,23 +19,22 @@ ports:
     onOpen: ignore
     name: "Preview Port"
 
-# Tasks to run on workspace startup
+# Tasks to run on workspace startup - FRESH INSTALL EVERY TIME
 tasks:
-  - name: "Setup and Auto-Launch Dev Server"
+  - name: "Fresh Install and Setup"
     init: |
-      npm config set cache /workspace/.npm-cache
-      npm ci --prefer-offline --no-audit --no-fund
-      npm run build || true
+      # Remove any existing node_modules, cache, and lock files for fresh start
+      rm -rf node_modules package-lock.json .npm .cache .vite
+      # Fresh npm install without any caching
+      npm install --no-cache
+      echo "Fresh dependencies installed!"
     command: |
-      echo "🚀 Auto-launching development server..."
-      echo "📦 Dependencies installed and cached"
-      echo "🧹 Clearing Vite cache..."
-      rm -rf node_modules/.vite
-      echo "🌐 Starting Vite dev server on port 5173..."
-      echo "🔧 Gitpod workspace URL: $GITPOD_WORKSPACE_URL"
-      echo "🔧 Gitpod workspace context: $GITPOD_WORKSPACE_CONTEXT_URL"
-      echo "🔧 Using Gitpod-specific Vite configuration..."
-      npx vite --config vite.config.gitpod.ts
+      echo "Fresh workspace ready for development!"
+      echo "Dependencies freshly installed (no cache)"
+      echo "Run 'npm run dev' to start the development server"
+      echo "Run 'npm run build' to build for production"
+      echo "Run 'npm run preview' to preview the production build"
+      echo "Your dev server will be available at port 5173"
 
 # VS Code extensions to install
 vscode:
@@ -50,4 +49,13 @@ vscode:
     - ms-vscode.vscode-css-peek
     - christian-kohler.path-intellisense
 
-# Note: GitHub prebuilds are now configured in Project Settings
+# GitHub prebuilds
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true
+    pullRequestsFromForks: false
+    addCheck: true
+    addComment: false
+    addBadge: true
