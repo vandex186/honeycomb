@@ -21,16 +21,17 @@ ports:
 
 # Tasks to run on workspace startup
 tasks:
-  - name: "Install Dependencies and Setup"
+  - name: "Setup and Auto-Launch Dev Server"
     init: |
       npm config set cache /workspace/.npm-cache
       npm ci --prefer-offline --no-audit --no-fund
       npm run build || true
     command: |
-      echo "Workspace ready for development!"
-      echo "Dependencies installed and cached"
-      echo "Clearing Vite cache and auto-launching development server..."
+      echo "🚀 Auto-launching development server..."
+      echo "📦 Dependencies installed and cached"
+      echo "🧹 Clearing Vite cache..."
       rm -rf node_modules/.vite
+      echo "🌐 Starting Vite dev server on port 5173..."
       npm run dev
 
 # VS Code extensions to install
@@ -46,13 +47,4 @@ vscode:
     - ms-vscode.vscode-css-peek
     - christian-kohler.path-intellisense
 
-# GitHub prebuilds
-github:
-  prebuilds:
-    master: true
-    branches: true
-    pullRequests: true
-    pullRequestsFromForks: false
-    addCheck: true
-    addComment: false
-    addBadge: true
+# Note: GitHub prebuilds are now configured in Project Settings
