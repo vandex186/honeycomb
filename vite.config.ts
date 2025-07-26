@@ -13,6 +13,7 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
+    allowedHosts: process.env.GITPOD_WORKSPACE_URL ? [process.env.GITPOD_WORKSPACE_URL.replace('https://', '')] : ['5173-vandex186-honeycomb-k99blh8xpj5.ws-us120.gitpod.io'],
   },
   build: {
     target: 'esnext',
