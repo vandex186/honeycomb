@@ -1,26 +1,71 @@
+# Dependencies
 node_modules
+.pnpm-store
+.npm
+
+# Build outputs
 dist
-.git
-.gitignore
-README.md
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+build
+.next
+.nuxt
+out
+coverage
+.nyc_output
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE/Editor files
 .vscode
 .idea
 *.swp
 *.swo
 *~
+.sublime-project
+.sublime-workspace
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-ansible
+
+# Documentation and examples
+README.md
+CHANGELOG.md
+LICENSE
 docs
 examples
 playground
+
+# Development tools
+ansible
 Taskfile.yml
+.gitpod.yml
+.gitpod.Dockerfile
+
+# Docker
+docker-compose.override.yml

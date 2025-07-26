@@ -1,7 +1,7 @@
 # Use Gitpod's workspace-full image as base
 FROM gitpod/workspace-full:latest
 
-# Set environment variables for optimization (no caching)
+# Set environment variables for optimization
 ENV DOCKER_BUILDKIT=1
 ENV BUILDKIT_PROGRESS=plain
 ENV NODE_OPTIONS="--max-old-space-size=4096"
@@ -13,10 +13,11 @@ RUN bash -c ". .nvm/nvm.sh && nvm install --lts && nvm use --lts && nvm alias de
 # Install pnpm globally
 RUN bash -c ". .nvm/nvm.sh && nvm use --lts && npm install -g pnpm"
 
-# Configure pnpm for fresh installs (no caching)
+# Configure pnpm with persistent cache for faster installs
 RUN bash -c ". .nvm/nvm.sh && nvm use --lts && \
-    pnpm config set store-dir /tmp/.pnpm-store && \
-    pnpm config set cache-dir /tmp/.pnpm-cache"
+    pnpm config set store-dir /home/gitpod/.pnpm-store && \
+    pnpm config set cache-dir /home/gitpod/.pnpm-cache && \
+    mkdir -p /home/gitpod/.pnpm-store /home/gitpod/.pnpm-cache"
 
 # Install global packages (only the essentials)
 RUN bash -c ". .nvm/nvm.sh && nvm use --lts && pnpm add -g \
@@ -54,8 +55,17 @@ RUN git config --global init.defaultBranch main && \
 # Set working directory
 WORKDIR /workspace
 
-# Set up environment for fresh installs
-RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc
+# Copy package files for dependency caching
+COPY package.json pnpm-lock.yaml* ./
+
+# Install dependencies during image build for faster workspace startup
+RUN bash -c ". .nvm/nvm.sh && nvm use --lts && \
+    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
+    else pnpm install; fi"
+
+# Set up environment
+RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc && \
+    echo 'export PATH="$PATH:./node_modules/.bin"' >> ~/.bashrc
 
 # Expose common development ports
 EXPOSE 5173 4173 3000 8080

@@ -91,9 +91,24 @@ tasks:
   gitpod:setup:
     desc: Setup for Gitpod environment
     cmds:
-      - pnpm install
-      - pnpm add -D @types/node
-      - pnpm run dev
+      - echo "🚀 Setting up Gitpod environment..."
+      - pnpm install --frozen-lockfile
+      - echo "✅ Dependencies installed"
+      - pnpm run dev --host 0.0.0.0
+
+  gitpod:dev:
+    desc: Start Gitpod development server
+    cmds:
+      - echo "🚀 Starting Vite server for Gitpod..."
+      - pnpm run dev --host 0.0.0.0 --port 5173
+
+  gitpod:prebuild:
+    desc: Prebuild setup for faster Gitpod launches
+    cmds:
+      - echo "🔄 Running prebuild setup..."
+      - pnpm install --frozen-lockfile
+      - pnpm run build
+      - echo "✅ Prebuild complete!"
 
   # Development workflow tasks
   start:

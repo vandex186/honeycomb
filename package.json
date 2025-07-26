@@ -16,7 +16,14 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "docker:start": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 start",
+    "docker:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 stop",
+    "docker:restart": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 restart",
+    "docker:rebuild": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 rebuild",
+    "docker:logs": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 logs",
+    "docker:shell": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 shell",
+    "docker:clean": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 clean"
   },
   "dependencies": {
     "@react-three/drei": "^9.89.0",

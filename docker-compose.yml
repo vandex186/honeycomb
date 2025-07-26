@@ -2,15 +2,35 @@ version: '3.8'
 
 services:
   vite:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     ports:
       - "5173:5173"
     environment:
       - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
       - NODE_ENV=development
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
     volumes:
-      - .:/app
+      # Mount source code for hot reload
+      - .:/app:cached
+      # Prevent node_modules from syncing (keep container deps isolated)
       - /app/node_modules
+      # Cache pnpm store for faster rebuilds
+      - pnpm-store:/root/.local/share/pnpm/store
     working_dir: /app
-    command: pnpm run dev
-    restart: unless-stopped 
+    restart: unless-stopped
+    # Improve performance on Windows
+    init: true
+    # Health check to ensure service is ready
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  pnpm-store:
