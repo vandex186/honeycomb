@@ -1,7 +1,7 @@
-# Gitpod configuration for honeycomb project
-image:
-  file: .gitpod.Dockerfile
+# gitpod.yml
+# Configuration file for Gitpod to automate the setup and runtime of the Honeycomb project
 
+<<<<<<< HEAD
 # Ports to expose
 ports:
   - port: 5173
@@ -35,20 +35,24 @@ tasks:
       echo "Run 'npm run build' to build for production"
       echo "Run 'npm run preview' to preview the production build"
       echo "Your dev server will be available at port 5173"
+=======
+# Tasks to run when the workspace starts
+tasks:
+  # Initial setup: Install dependencies
+  - init: npm install
+  # Command to start the development server
+  - command: |
+      echo "Starting Vite server..."
+      npm run dev
+>>>>>>> f7f535140d58ad9cca1e2b29662469835fe16725
 
-# VS Code extensions to install
+# VSCode extensions for development environment
 vscode:
   extensions:
-    - esbenp.prettier-vscode
-    - ms-vscode.vscode-typescript-next
-    - bradlc.vscode-tailwindcss
-    - ms-vscode.vscode-json
-    - formulahendry.auto-rename-tag
-    - ms-vscode.vscode-eslint
-    - ms-vscode.vscode-npm-script
-    - ms-vscode.vscode-css-peek
-    - christian-kohler.path-intellisense
+    - dbaeumer.vscode-eslint      # ESLint for linting JavaScript/TypeScript
+    - esbenp.prettier-vscode      # Prettier for code formatting
 
+<<<<<<< HEAD
 # GitHub prebuilds
 github:
   prebuilds:
@@ -59,3 +63,39 @@ github:
     addCheck: true
     addComment: false
     addBadge: true
+=======
+# Port configuration
+ports:
+  - port: 5173
+    onOpen: open-preview         # Open port 5173 in preview mode when the server starts
+    visibility: public           # Make the port publicly accessible (required for Gitpod URLs)
+
+# Environment variables (optional, if custom variables are needed instead of GITPOD_WORKSPACE_URL)
+env:
+  # Optionally set a custom variable if GITPOD_WORKSPACE_URL is unreliable
+  MY_WORKSPACE_URL: 5173-vandex186-honeycomb-vjhec9j9f3ws-us120.gitpod.io
+
+# Git configuration (optional, to set user details)
+# gitConfig:
+#   - name: user.name
+#     value: "Your Name"           # Replace with your name
+#   - name: user.email
+#     value: "your.email@example.com" # Replace with your email
+
+# Checkout configuration (optional, to specify branch or repository settings)
+checkoutLocation: .
+
+# Image configuration (optional, to use a specific base image)
+image:
+  file: .gitpod.Dockerfile      # Reference a custom Dockerfile if needed (see below)
+
+# Optional: Custom Dockerfile for specific dependencies
+# Uncomment and create .gitpod.Dockerfile if you need a custom image
+#image:
+#  file: .gitpod.Dockerfile
+
+# Optional: Persistent volume for storing build artifacts or cache
+#volumes:
+#  - name: npm-cache
+#    path: /home/gitpod/.npm
+>>>>>>> f7f535140d58ad9cca1e2b29662469835fe16725
