@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 5173
 
 # Start development server
-CMD ["pnpm", "run", "dev", "--host", "0.0.0.0"] 
+CMD ["pnpm", "run", "dev"] 
