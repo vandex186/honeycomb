@@ -6,36 +6,33 @@ image:
 ports:
   - port: 5173
     onOpen: open
-    name: Vite Dev Server
-    description: Development server for the application
+    name: "Vite Dev Server"
+    description: "Development server for the application"
   - port: 4173
     onOpen: notify
-    name: Vite Preview Server
-    description: Preview server for production build
+    name: "Vite Preview Server"
+    description: "Preview server for production build"
   - port: 3000
     onOpen: ignore
-    name: Additional Dev Port
+    name: "Additional Dev Port"
   - port: 8080
     onOpen: ignore
-    name: Preview Port
+    name: "Preview Port"
 
 # Tasks to run on workspace startup
 tasks:
-  - name: Install Dependencies and Setup
+  - name: "Install Dependencies and Setup"
     init: |
-      # Enable npm cache for faster installs
       npm config set cache /workspace/.npm-cache
-      # Install dependencies with optimized flags
       npm ci --prefer-offline --no-audit --no-fund
-      # Pre-warm Vite cache
       npm run build || true
     command: |
-      echo "🚀 Workspace ready for development!"
-      echo "📦 Dependencies installed and cached"
-      echo "⚡ Run 'npm run dev' to start the development server"
-      echo "🏗️  Run 'npm run build' to build for production"
-      echo "👀 Run 'npm run preview' to preview the production build"
-      echo "🔗 Your dev server will be available at port 5173"
+      echo "Workspace ready for development!"
+      echo "Dependencies installed and cached"
+      echo "Run 'npm run dev' to start the development server"
+      echo "Run 'npm run build' to build for production"
+      echo "Run 'npm run preview' to preview the production build"
+      echo "Your dev server will be available at port 5173"
 
 # VS Code extensions to install
 vscode:
@@ -50,13 +47,7 @@ vscode:
     - ms-vscode.vscode-css-peek
     - christian-kohler.path-intellisense
 
-# Environment variables for optimization
-env:
-  NODE_OPTIONS: "--max-old-space-size=4096"
-  VITE_CACHE_DIR: "/workspace/.vite"
-  NPM_CONFIG_CACHE: "/workspace/.npm-cache"
-
-# GitHub prebuilds with optimization
+# GitHub prebuilds
 github:
   prebuilds:
     master: true
@@ -66,8 +57,3 @@ github:
     addCheck: true
     addComment: false
     addBadge: true
-    # Prebuild timeout
-    timeout: 20m
-
-# Workspace class for better performance
-workspaceClass: g1-standard
