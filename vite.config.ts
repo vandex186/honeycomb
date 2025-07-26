@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   server: {
     allowedHosts: [
-      '5173-vandex186-honeycomb-eynlwgj6uvy.ws-us120.gitpod.io',
+      '5173-vandex186-honeycomb-t0d5g9h8jae.ws-us120.gitpod.io',
     ],
     host: true,
   },
