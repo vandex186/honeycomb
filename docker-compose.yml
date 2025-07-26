@@ -27,7 +27,7 @@ services:
     stop_signal: SIGTERM
     # Health check to ensure service is ready
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5173 || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f vite || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
