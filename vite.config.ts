@@ -3,6 +3,10 @@ import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
 export default defineConfig({
+  server: {
+    allowedHosts: 'all', // 🔥 Allow all external hosts (safe for Gitpod dev)
+    host: true,          // Enable external access (needed for Gitpod URLs)
+  },
   build: {
     target: 'esnext',
     lib: {
