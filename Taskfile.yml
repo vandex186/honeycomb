@@ -1,0 +1,138 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install dependencies
+    cmds:
+      - pnpm install
+
+  dev:
+    desc: Start development server
+    cmds:
+      - pnpm run dev
+    sources:
+      - src/**/*
+      - examples/**/*
+      - playground/**/*
+      - package.json
+    generates:
+      - dist/
+
+  build:
+    desc: Build for production
+    cmds:
+      - pnpm run build
+    sources:
+      - src/**/*
+      - package.json
+    generates:
+      - dist/
+
+  preview:
+    desc: Preview production build
+    cmds:
+      - pnpm run preview
+    deps: [build]
+
+  lint:
+    desc: Run ESLint
+    cmds:
+      - pnpm run lint
+
+  lint:fix:
+    desc: Fix ESLint issues
+    cmds:
+      - pnpm run lint --fix
+
+  format:
+    desc: Format code with Prettier
+    cmds:
+      - pnpm run format
+
+  test:
+    desc: Run tests
+    cmds:
+      - pnpm test
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - pnpm test --watch
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf dist/
+      - rm -rf node_modules/
+      - rm -rf .vite/
+      - rm -rf docs/.vitepress/cache/
+
+  docs:dev:
+    desc: Start documentation development server
+    cmds:
+      - pnpm run docs:dev
+
+  docs:build:
+    desc: Build documentation
+    cmds:
+      - pnpm run docs:build
+
+  docs:preview:
+    desc: Preview documentation build
+    cmds:
+      - pnpm run docs:preview
+
+  setup:
+    desc: Initial project setup
+    cmds:
+      - pnpm install
+      - pnpm add -D @types/node
+
+  gitpod:setup:
+    desc: Setup for Gitpod environment
+    cmds:
+      - pnpm install
+      - pnpm add -D @types/node
+      - pnpm run dev
+
+  # Development workflow tasks
+  start:
+    desc: Start development environment (install + dev)
+    deps: [install]
+    cmds:
+      - pnpm run dev
+
+  check:
+    desc: Run all checks (lint + test)
+    deps: [lint, test]
+
+  full-build:
+    desc: Full build process (lint + test + build)
+    deps: [lint, test, build]
+
+  # Utility tasks
+  update-deps:
+    desc: Update dependencies
+    cmds:
+      - pnpm update
+
+  audit:
+    desc: Audit dependencies
+    cmds:
+      - pnpm audit
+
+  type-check:
+    desc: Run TypeScript type checking
+    cmds:
+      - pnpm tsc --noEmit
+
+  # Examples
+  examples:dev:
+    desc: Start examples development server
+    cmds:
+      - cd examples && pnpm run dev
+
+  playground:dev:
+    desc: Start playground development server
+    cmds:
+      - cd playground && pnpm run dev 

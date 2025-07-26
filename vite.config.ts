@@ -5,7 +5,7 @@ import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const workspaceUrl = process.env.GITPOD_WORKSPACE_URL || 'https://vandex186-honeycomb-vjhec9j9f3ws-us120.gitpod.io';
+const workspaceUrl = process.env.GITPOD_WORKSPACE_URL || '';
 const allowedHost = workspaceUrl.replace(/https?:\/\//, '');
 console.log('Resolved allowedHost:', allowedHost);
 
@@ -26,5 +26,5 @@ export default defineConfig({
       name: 'Honeycomb',
     },
   },
-  plugins: [dts({ tsconfigPath: 'tsconfig.build.json' })],
+  plugins: [dts({ tsconfigPath: 'tsconfig.json' })],
 });

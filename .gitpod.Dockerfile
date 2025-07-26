@@ -10,13 +10,16 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 USER gitpod
 RUN bash -c ". .nvm/nvm.sh && nvm install --lts && nvm use --lts && nvm alias default lts/*"
 
-# Configure npm for fresh installs (no caching)
-RUN bash -c ". .nvm/nvm.sh && nvm use --lts && \
-    npm config set audit false && \
-    npm config set fund false"
+# Install pnpm globally
+RUN bash -c ". .nvm/nvm.sh && nvm use --lts && npm install -g pnpm"
 
-# Install global npm packages (only the essentials)
-RUN bash -c ". .nvm/nvm.sh && nvm use --lts && npm install -g \
+# Configure pnpm for fresh installs (no caching)
+RUN bash -c ". .nvm/nvm.sh && nvm use --lts && \
+    pnpm config set store-dir /tmp/.pnpm-store && \
+    pnpm config set cache-dir /tmp/.pnpm-cache"
+
+# Install global packages (only the essentials)
+RUN bash -c ". .nvm/nvm.sh && nvm use --lts && pnpm add -g \
     typescript@latest \
     @types/node@latest \
     vite@latest \

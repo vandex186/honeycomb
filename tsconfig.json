@@ -16,7 +16,24 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
-  "exclude": ["dist", "docs/api/**/*", "node_modules"]
+  "include": [
+    "src/**/*",
+    "examples/**/*",
+    "playground/**/*",
+    "vite.config.ts",
+    "typedoc.json"
+  ],
+  "exclude": [
+    "dist",
+    "docs/api/**/*",
+    "node_modules",
+    "**/*.test.ts"
+  ],
+  "ts-node": {
+    "esm": true
+  }
 }
