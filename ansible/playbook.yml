@@ -1,0 +1,184 @@
+---
+- name: Deploy Honeycomb Vite App to Contabo
+  hosts: production
+  become: yes
+  vars:
+    app_name: "{{ app_name }}"
+    app_user: "{{ app_name }}"
+    app_dir: "/opt/{{ app_name }}"
+    app_port: "{{ app_port }}"
+    domain: "{{ domain }}"
+    nginx_port: "{{ nginx_port }}"
+    ssl_enabled: "{{ ssl_enabled }}"
+    node_version: "18"
+    pnpm_version: "latest"
+
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: yes
+        upgrade: yes
+      tags: [system]
+
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - git
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+          - ufw
+          - htop
+          - unzip
+        state: present
+      tags: [system]
+
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        shell: /bin/bash
+        home: "/home/{{ app_user }}"
+        create_home: yes
+      tags: [user]
+
+    - name: Install Node.js
+      block:
+        - name: Download Node.js installation script
+          get_url:
+            url: "https://deb.nodesource.com/setup_{{ node_version }}.x"
+            dest: /tmp/nodejs_setup.sh
+            mode: '0755'
+
+        - name: Run Node.js installation script
+          shell: /tmp/nodejs_setup.sh
+          args:
+            creates: /usr/bin/node
+
+        - name: Install Node.js
+          apt:
+            name: nodejs
+            state: present
+            update_cache: yes
+      tags: [nodejs]
+
+    - name: Install pnpm globally
+      npm:
+        name: pnpm
+        global: yes
+        state: present
+      tags: [nodejs]
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
+      tags: [app]
+
+    - name: Copy application files
+      synchronize:
+        src: "{{ playbook_dir }}/../"
+        dest: "{{ app_dir }}"
+        delete: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=.git"
+          - "--exclude=dist"
+          - "--exclude=.vite"
+          - "--exclude=ansible"
+      become_user: "{{ app_user }}"
+      tags: [app]
+
+    - name: Install application dependencies
+      shell: "cd {{ app_dir }} && pnpm install"
+      become_user: "{{ app_user }}"
+      tags: [app]
+
+    - name: Build application
+      shell: "cd {{ app_dir }} && pnpm run build"
+      become_user: "{{ app_user }}"
+      tags: [app]
+
+    - name: Create systemd service file
+      template:
+        src: honeycomb.service.j2
+        dest: /etc/systemd/system/{{ app_name }}.service
+        mode: '0644'
+      tags: [service]
+
+    - name: Create nginx configuration
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/sites-available/{{ app_name }}
+        mode: '0644'
+      tags: [nginx]
+
+    - name: Enable nginx site
+      file:
+        src: /etc/nginx/sites-available/{{ app_name }}
+        dest: /etc/nginx/sites-enabled/{{ app_name }}
+        state: link
+      tags: [nginx]
+
+    - name: Remove default nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      tags: [nginx]
+
+    - name: Configure firewall
+      ufw:
+        rule: allow
+        port: "{{ nginx_port }}"
+        proto: tcp
+      tags: [firewall]
+
+    - name: Enable firewall
+      ufw:
+        state: enabled
+        policy: deny
+      tags: [firewall]
+
+    - name: Start and enable application service
+      systemd:
+        name: "{{ app_name }}"
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      tags: [service]
+
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+      tags: [nginx]
+
+    - name: Setup SSL certificate (if enabled)
+      block:
+        - name: Obtain SSL certificate
+          command: "certbot --nginx -d {{ domain }} --non-interactive --agree-tos --email admin@{{ domain }}"
+          args:
+            creates: "/etc/letsencrypt/live/{{ domain }}"
+          when: ssl_enabled | bool
+
+        - name: Setup SSL renewal cron job
+          cron:
+            name: "SSL Certificate Renewal"
+            job: "certbot renew --quiet"
+            hour: "2"
+            minute: "0"
+          when: ssl_enabled | bool
+      tags: [ssl]
+
+    - name: Display deployment info
+      debug:
+        msg:
+          - "Deployment completed successfully!"
+          - "Application: {{ app_name }}"
+          - "Domain: {{ domain }}"
+          - "Port: {{ app_port }}"
+          - "SSL: {{ ssl_enabled }}"
+      tags: [info] 

@@ -17,7 +17,10 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
-    allowedHosts: [allowedHost],
+    allowedHosts: [
+      allowedHost,
+      '5173-vandex186-honeycomb-uxormvzzkpe.ws-us120.gitpod.io', // Gitpod workspace URL
+    ],
   },
   build: {
     target: 'esnext',
