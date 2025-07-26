@@ -29,7 +29,8 @@ tasks:
     command: |
       echo "Workspace ready for development!"
       echo "Dependencies installed and cached"
-      echo "Auto-launching development server..."
+      echo "Clearing Vite cache and auto-launching development server..."
+      rm -rf node_modules/.vite
       npm run dev
 
 # VS Code extensions to install
