@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  vite:
+    build: .
+    ports:
+      - "5173:5173"
+    environment:
+      - GITPOD_WORKSPACE_URL=${GITPOD_WORKSPACE_URL}
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app
+    command: pnpm run dev --host 0.0.0.0
+    restart: unless-stopped 

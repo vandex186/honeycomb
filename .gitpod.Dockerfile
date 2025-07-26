@@ -36,8 +36,13 @@ RUN apt-get update && apt-get install -y \
     htop \
     tree \
     jq \
+    docker.io \
+    docker-compose \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Add gitpod user to docker group
+RUN usermod -aG docker gitpod
 
 # Switch back to gitpod user
 USER gitpod

@@ -3,8 +3,7 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: pnpm install
-  - command: pnpm add -D @types/node && pnpm run dev
+  - init: docker-compose up -d
 
 ports:
   - port: 5173
@@ -15,3 +14,4 @@ vscode:
   extensions:
     - dbaeumer.vscode-eslint
     - esbenp.prettier-vscode
+    - ms-azuretools.vscode-docker
