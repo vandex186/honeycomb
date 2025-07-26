@@ -29,5 +29,5 @@ USER vite
 # Expose port
 EXPOSE 5173
 
-# Start development server with hot reload
-CMD ["pnpm", "run", "dev", "--host", "0.0.0.0"]
+# Start development server with hot reload and proper signal handling
+CMD ["pnpm", "run", "dev", "--host", "0.0.0.0", "--port", "5173"]

@@ -150,4 +150,76 @@ tasks:
   playground:dev:
     desc: Start playground development server
     cmds:
-      - cd playground && pnpm run dev 
+      - cd playground && pnpm run dev
+
+  # Docker tasks
+  docker:start:
+    desc: Start Docker development environment
+    cmds:
+      - echo "🚀 Starting Docker development environment..."
+      - docker-compose up -d
+      - echo "✅ Development server should be available at http://localhost:5173"
+      - echo "💡 Use 'task docker:logs' to view logs or 'task docker:stop' to stop"
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+
+  docker:stop:
+    desc: Stop Docker development environment
+    cmds:
+      - echo "⏹️ Stopping Docker development environment..."
+      - docker-compose down
+      - echo "✅ Docker environment stopped"
+
+  docker:restart:
+    desc: Restart Docker development environment
+    cmds:
+      - echo "🔄 Restarting Docker development environment..."
+      - docker-compose restart
+      - echo "✅ Docker environment restarted"
+
+  docker:rebuild:
+    desc: Rebuild and restart Docker containers
+    cmds:
+      - echo "🔨 Rebuilding Docker containers..."
+      - docker-compose down
+      - docker-compose build --no-cache
+      - docker-compose up -d
+      - echo "✅ Docker rebuild complete!"
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+
+  docker:logs:
+    desc: Show Docker container logs
+    cmds:
+      - echo "📋 Showing Docker logs (Press Ctrl+C to exit)..."
+      - docker-compose logs -f
+
+  docker:shell:
+    desc: Open shell in Docker container
+    cmds:
+      - echo "🐚 Opening shell in Docker container..."
+      - docker-compose exec vite sh
+
+  docker:clean:
+    desc: Clean Docker resources and rebuild
+    cmds:
+      - echo "🧹 Cleaning Docker resources..."
+      - docker-compose down -v
+      - docker system prune -f
+      - docker-compose build
+      - echo "✅ Docker cleanup complete!"
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+
+  docker:build:
+    desc: Build Docker containers only
+    cmds:
+      - echo "🔨 Building Docker containers..."
+      - docker-compose build
+      - echo "✅ Docker build complete!"
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1

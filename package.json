@@ -4,6 +4,7 @@
   "description": "A hexagonal grid game with 3D transformations",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -17,13 +18,14 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "type-check": "tsc --noEmit",
-    "docker:start": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 start",
-    "docker:stop": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 stop",
-    "docker:restart": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 restart",
-    "docker:rebuild": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 rebuild",
-    "docker:logs": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 logs",
-    "docker:shell": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 shell",
-    "docker:clean": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1 clean"
+    "docker:start": "task docker:start",
+    "docker:stop": "task docker:stop",
+    "docker:restart": "task docker:restart",
+    "docker:rebuild": "task docker:rebuild",
+    "docker:logs": "task docker:logs",
+    "docker:shell": "task docker:shell",
+    "docker:clean": "task docker:clean",
+    "docker:build": "task docker:build"
   },
   "dependencies": {
     "@react-three/drei": "^9.89.0",

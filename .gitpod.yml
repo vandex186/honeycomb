@@ -22,7 +22,7 @@ tasks:
       fi
       # Run prebuild setup
       task gitpod:prebuild
-    command: task gitpod:dev
+    command: bash scripts/gitpod-start.sh
 
 ports:
   - port: 5173
