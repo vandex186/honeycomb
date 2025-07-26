@@ -5,9 +5,8 @@ import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Extract host from GITPOD_WORKSPACE_URL or use fallback
-const workspaceUrl = process.env.GITPOD_WORKSPACE_URL || 'https://default.gitpod.io';
-const allowedHost = workspaceUrl.replace(/https?:\/\//, ''); // Remove http:// or https://
+const workspaceUrl = process.env.GITPOD_WORKSPACE_URL || 'https://vandex186-honeycomb-vjhec9j9f3ws-us120.gitpod.io';
+const allowedHost = workspaceUrl.replace(/https?:\/\//, '');
 console.log('Resolved allowedHost:', allowedHost);
 
 export default defineConfig({
