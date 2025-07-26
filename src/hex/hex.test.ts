@@ -4,15 +4,16 @@ import { CubeCoordinates, Ellipse, HexCoordinates, Orientation, Point } from './
 
 describe('creation', () => {
   test('returns a hex with coordinates 0,0 when created without arguments', () => {
-    expect(new Hex()).toContain<CubeCoordinates>({ q: 0, r: 0, s: 0 })
+    expect(new Hex()).toMatchObject({ q: 0, r: 0 })
+    expect(new Hex().s + 0).toBe(0) // Handle negative zero
   })
 
   test('returns a hex from the passed hex coordinates', () => {
-    expect(new Hex([1, 2])).toContain<CubeCoordinates>({ q: 1, r: 2, s: -3 })
-    expect(new Hex({ col: 1, row: 2 })).toContain<CubeCoordinates>({ q: 0, r: 2, s: -2 })
-    expect(new Hex({ q: 1, r: 2 })).toContain<CubeCoordinates>({ q: 1, r: 2, s: -3 })
-    expect(new Hex({ r: 3, s: 0 })).toContain<CubeCoordinates>({ q: -3, r: 3, s: 0 })
-    expect(new Hex({ q: -3, r: 4, s: -1 })).toContain<CubeCoordinates>({ q: -3, r: 4, s: -1 })
+    expect(new Hex([1, 2])).toMatchObject({ q: 1, r: 2, s: -3 })
+    expect(new Hex({ col: 1, row: 2 })).toMatchObject({ q: 0, r: 2, s: -2 })
+    expect(new Hex({ q: 1, r: 2 })).toMatchObject({ q: 1, r: 2, s: -3 })
+    expect(new Hex({ r: 3, s: 0 })).toMatchObject({ q: -3, r: 3, s: 0 })
+    expect(new Hex({ q: -3, r: 4, s: -1 })).toMatchObject({ q: -3, r: 4, s: -1 })
   })
 })
 
@@ -181,14 +182,14 @@ describe('clone()', () => {
     const hex = new Hex([6, -2])
     const result = hex.clone()
 
-    expect(result).toContain<CubeCoordinates>({ q: 6, r: -2, s: -4 })
+    expect(result).toMatchObject({ q: 6, r: -2, s: -4 })
     expect(result).not.toBe<Hex>(hex)
   })
 
   test('returns a clone of the instance with different coordinates', () => {
     const hex = new Hex([6, -2])
 
-    expect(hex.clone([1, 2])).toContain<CubeCoordinates>({ q: 1, r: 2, s: -3 })
+    expect(hex.clone([1, 2])).toMatchObject({ q: 1, r: 2, s: -3 })
   })
 
   test('maintains any custom properties', () => {
@@ -201,8 +202,8 @@ describe('clone()', () => {
     }
     const hex = new CustomHex([3, 0])
 
-    expect(hex.clone()).toContain<Partial<CustomHex>>({ q: 3, r: 0, s: -3, custom: 'test' })
-    expect(hex.clone([0, 1])).toContain<Partial<CustomHex>>({ q: 0, r: 1, s: -1, custom: 'test' })
+    expect(hex.clone()).toMatchObject({ q: 3, r: 0, s: -3, custom: 'test' })
+    expect(hex.clone([0, 1])).toMatchObject({ q: 0, r: 1, s: -1, custom: 'test' })
   })
 })
 
@@ -234,6 +235,6 @@ describe('toString()', () => {
 describe('translate', () => {
   test('returns a clone of the instance with the delta partial cube coordinates', () => {
     const hex = new Hex([3, 0])
-    expect(hex.translate({ q: -2, r: 1 })).toContain<CubeCoordinates>({ q: 1, r: 1, s: -2 })
+    expect(hex.translate({ q: -2, r: 1 })).toMatchObject({ q: 1, r: 1, s: -2 })
   })
 })

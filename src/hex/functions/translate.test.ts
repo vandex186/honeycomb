@@ -8,7 +8,7 @@ test('returns a clone of the passed hex with the delta partial cube coordinates'
 
   expect(result).toBeInstanceOf(Hex)
   expect(result).not.toBe(Hex)
-  expect(result).toContain({ q: -1, r: 1, s: 0 })
+  expect(result).toMatchObject({ q: -1, r: 1, s: 0 })
 })
 
 test('returns translated cube coordinates from partial cube coordinates', () => {

@@ -2,17 +2,6 @@
 image:
   file: .gitpod.Dockerfile
 
-# Enable prebuilt workspaces for faster launches
-github:
-  prebuilds:
-    master: true
-    branches: true
-    pullRequests: true
-    pullRequestsFromForks: true
-    addCheck: true
-    addComment: true
-    addBadge: true
-
 tasks:
   - init: |
       # Install Task runner if not available

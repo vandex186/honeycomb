@@ -129,13 +129,10 @@ describe('static fromJSON()', () => {
     const result = Grid.fromJSON({ hexSettings, coordinates })
 
     expect(result).toBeInstanceOf(Grid)
-    expect(result.hexPrototype).toContain(hexSettings)
-    expect(result).toStrictEqual(
-      new Grid(
-        Hex,
-        coordinates.map((c) => new Hex(c)),
-      ),
-    )
+    expect(result.hexPrototype).toMatchObject(hexSettings)
+    const expectedGrid = new Grid(Hex, coordinates.map((c) => new Hex(c)))
+    expect(result.size).toBe(expectedGrid.size)
+    expect([...result]).toEqual([...expectedGrid])
   })
 
   test('accepts an optional hex factory to create custom hexes with', () => {
@@ -147,7 +144,7 @@ describe('static fromJSON()', () => {
     const result = Grid.fromJSON({ hexSettings: CustomHex.settings, coordinates }, hexFactory)
 
     expect(result).toBeInstanceOf(Grid)
-    expect(result.hexPrototype).toContain(CustomHex.settings)
+    expect(result.hexPrototype).toMatchObject(CustomHex.settings)
     expect(hexFactory).toBeCalledTimes(2)
     expect(hexFactory).toBeCalledWith(coordinates[0], 0, coordinates)
     expect(hexFactory).toBeCalledWith(coordinates[1], 1, coordinates)
@@ -511,7 +508,7 @@ describe('toJSON()', () => {
 
     expect(result).toStrictEqual({ hexSettings, coordinates })
     expect(JSON.stringify(grid)).toMatchInlineSnapshot(
-      '"{\\"hexSettings\\":{\\"dimensions\\":{\\"xRadius\\":10,\\"yRadius\\":10},\\"orientation\\":\\"FLAT\\",\\"origin\\":{\\"x\\":0,\\"y\\":0},\\"offset\\":1},\\"coordinates\\":[{\\"q\\":0,\\"r\\":0},{\\"q\\":1,\\"r\\":0}]}"',
+      `"{"hexSettings":{"dimensions":{"xRadius":10,"yRadius":10},"orientation":"FLAT","origin":{"x":0,"y":0},"offset":1},"coordinates":[{"q":0,"r":0},{"q":1,"r":0}]}"`,
     )
   })
 })

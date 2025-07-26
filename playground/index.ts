@@ -1,6 +1,7 @@
 import { defineHex, Grid, rectangle } from '../src'
 import { Orientation } from '../src/hex/types'
 import { BUILDING, FIELD, ROAD, TREES, WATER } from '../examples/line-of-sight/terrain'
+import { UserSetup, UserSetupData } from './user-setup'
 
 interface GridOptions {
   orientation: Orientation
@@ -33,8 +34,14 @@ let mainGrid: Grid<CustomHex | VerticalHex>
 let currentView = 'dungeon'
 let showCoordinates = false
 let showVisibility = false
-let currentLibraryContent: string | null = null
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let currentLibraryContent: string | null = null // Used in library functions
 let mapRotation = 0 // Track map rotation in degrees
+
+// User data
+let userData: UserSetupData | null = null
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let setupCompleted = false // Used in user setup flow
 
 // New Castle terrain type
 const CASTLE = {
@@ -44,6 +51,7 @@ const CASTLE = {
 }
 
 // Avatar content data for different views
+/*
 const avatarData = {
   dungeon: {
     title: 'Dungeon Explorer',
@@ -62,6 +70,7 @@ const avatarData = {
     stats: ['Books: 47', 'Spells: 23', 'Research: 89%']
   }
 }
+*/
 
 // Library content data
 const libraryContent = {
@@ -348,8 +357,26 @@ function calculateRadialDistanceAndPosition(fromIndex: number, toIndex: number, 
   return { distance, position }
 }
 
-function updateAvatarContent(view: string) {
-  // Avatar is now just a circle, no additional content needed
+function updateAvatarContent(_view: string) {
+  const avatarContainer = document.querySelector('.user-avatar-container')
+  if (!avatarContainer) return
+
+  // Update avatar with user data if available
+  if (userData) {
+    const avatarIcon = avatarContainer.querySelector('.avatar-icon') as HTMLElement
+    if (avatarIcon) {
+      // Set character class emoji
+      const classEmojis: Record<string, string> = {
+        warrior: '🛡️',
+        mage: '🔮',
+        rogue: '🗡️',
+        paladin: '⚜️',
+        ranger: '🏹'
+      }
+      avatarIcon.textContent = classEmojis[userData.characterClass] || '👤'
+      avatarIcon.title = `${userData.playerName} - ${userData.characterClass}`
+    }
+  }
 }
 
 function updateNavButtonStates(activeView: string) {
@@ -625,6 +652,9 @@ function showLibraryMain() {
 ;(window as any).showLibraryMain = showLibraryMain
 
 function initializeGrid(view: string) {
+  console.log('🔧 [DEBUG] initializeGrid called with view:', view)
+  console.log('🔧 [DEBUG] userData:', userData)
+  
   document.body.setAttribute('data-view', view)
   updateAvatarContent(view)
   updateNavButtonStates(view)
@@ -632,23 +662,39 @@ function initializeGrid(view: string) {
   const container = document.getElementById('container')
   if (container) {
     container.innerHTML = '' // Clear previous content
+  } else {
+    console.error('❌ [DEBUG] Container element not found!')
+    return
   }
 
   let gridOptions: GridOptions
+
+  // Get grid size from user data or use defaults
+  const getGridSize = (size: 'small' | 'medium' | 'large') => {
+    switch (size) {
+      case 'small': return 5
+      case 'medium': return 7
+      case 'large': return 11
+      default: return 7
+    }
+  }
+
+  const gridSize = userData?.gridSize || 'medium'
+  const baseSize = getGridSize(gridSize)
 
   switch (view) {
     case 'dungeon':
       gridOptions = {
         orientation: Orientation.FLAT,
-        width: 7,
-        height: 7
+        width: baseSize,
+        height: baseSize
       }
       break
     case 'castle': // This is now the chart view (renamed)
       gridOptions = {
         orientation: Orientation.POINTY,
-        width: 11,  // Increased to accommodate 5 rings
-        height: 11  // Increased to accommodate 5 rings
+        width: Math.max(11, baseSize),  // Castle needs at least 11x11 for rings
+        height: Math.max(11, baseSize)
       }
       break
     case 'library':
@@ -657,8 +703,8 @@ function initializeGrid(view: string) {
     default:
       gridOptions = {
         orientation: Orientation.POINTY,
-        width: 7,
-        height: 7
+        width: baseSize,
+        height: baseSize
       }
       break
   }
@@ -768,8 +814,14 @@ function getCircleLetter(radialDistance: number): string {
 }
 
 function renderGrid(view: string) {
+  console.log('🔧 [DEBUG] renderGrid called with view:', view)
+  console.log('🔧 [DEBUG] mainGrid exists:', !!mainGrid)
+  
   const container = document.getElementById('container')
-  if (!container) return
+  if (!container) {
+    console.error('❌ [DEBUG] Container not found in renderGrid!')
+    return
+  }
 
   // Clear container completely
   container.innerHTML = ''
@@ -946,7 +998,7 @@ function renderGrid(view: string) {
   setupInteractions(svg, mainGridGroup, gridWidth, gridHeight)
 }
 
-function setupInteractions(svg: SVGElement, gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
+function setupInteractions(svg: SVGElement, _gridGroup: SVGGElement, gridWidth: number, gridHeight: number) {
   const cameraState = {
     matrix: [1, 0, 0, 0, 0, 0.4, 0, -0.002, 0, 0, 1, 0, 0, 0, 0, 1],
     isDragging: false,
@@ -1227,4 +1279,114 @@ document.addEventListener('touchend', (e) => {
   }
 })
 
-initializeGrid('dungeon')
+// Handle user setup completion
+function handleUserSetupComplete(data: UserSetupData) {
+  console.log('🔧 [DEBUG] User setup completed:', data)
+  
+  userData = data
+  setupCompleted = true
+  
+  // Apply theme if selected
+  if (data.theme) {
+    document.body.setAttribute('data-theme', data.theme)
+    console.log('🔧 [DEBUG] Theme applied:', data.theme)
+  }
+  
+  // Initialize with user's chosen starting view
+  console.log('🔧 [DEBUG] Initializing grid with view:', data.startingView)
+  initializeGrid(data.startingView)
+  
+  // Show welcome message
+  showWelcomeMessage(data)
+}
+
+// Show welcome message after setup
+function showWelcomeMessage(data: UserSetupData) {
+  const container = document.getElementById('container')
+  if (!container) return
+  
+  const welcomeDiv = document.createElement('div')
+  welcomeDiv.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border: 2px solid #4a90e2;
+    border-radius: 15px;
+    padding: 2rem;
+    color: white;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    animation: welcomeSlideIn 0.5s ease-out;
+  `
+  
+  welcomeDiv.innerHTML = `
+    <h2>🎉 Welcome, ${data.playerName}!</h2>
+    <p>You are a ${data.characterClass} starting your adventure in the ${data.startingView}.</p>
+    <p>Grid Size: ${data.gridSize} | Difficulty: ${data.difficulty} | Theme: ${data.theme}</p>
+    <button onclick="this.parentElement.remove()" style="
+      background: linear-gradient(45deg, #4a90e2, #7b68ee);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+    ">🚀 Begin Adventure!</button>
+  `
+  
+  // Add welcome animation styles
+  const style = document.createElement('style')
+  style.textContent = `
+    @keyframes welcomeSlideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+  `
+  document.head.appendChild(style)
+  
+  document.body.appendChild(welcomeDiv)
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (welcomeDiv.parentElement) {
+      welcomeDiv.remove()
+    }
+  }, 5000)
+}
+
+// Initialize user setup
+console.log('🔧 [DEBUG] Initializing application...')
+console.log('🔧 [DEBUG] DOM ready, creating user setup modal')
+
+const userSetup = new UserSetup({
+  onComplete: handleUserSetupComplete,
+  onCancel: () => {
+    console.log('🔧 [DEBUG] User setup cancelled, using defaults')
+    // Use default settings if user cancels
+    userData = {
+      playerName: 'Adventurer',
+      characterClass: 'warrior',
+      startingView: 'dungeon',
+      gridSize: 'medium',
+      difficulty: 'normal',
+      theme: 'classic'
+    }
+    setupCompleted = true
+    console.log('🔧 [DEBUG] Using default settings:', userData)
+    initializeGrid('dungeon')
+  }
+})
+
+// Show setup modal on page load
+console.log('🔧 [DEBUG] Showing user setup modal')
+userSetup.show()

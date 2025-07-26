@@ -59,13 +59,49 @@ tasks:
     cmds:
       - pnpm test --watch
 
+  test:once:
+    desc: Run tests once and exit (no watch mode)
+    cmds:
+      - npx vitest run --reporter=basic
+
+  lint:once:
+    desc: Run linting once and exit (no watch mode)
+    cmds:
+      - pnpm lint
+
+  check:once:
+    desc: Run all checks once and exit (lint + test)
+    cmds:
+      - echo "🔧 [DEBUG] Running lint check..."
+      - pnpm lint
+      - echo "🔧 [DEBUG] Running tests..."
+      - npx vitest run --reporter=basic
+      - echo "✅ All checks completed!"
+
   clean:
     desc: Clean build artifacts
     cmds:
-      - rm -rf dist/
-      - rm -rf node_modules/
-      - rm -rf .vite/
-      - rm -rf docs/.vitepress/cache/
+      - |
+        if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+          echo "🔧 [DEBUG] Windows detected - using PowerShell commands"
+          if command -v Remove-Item >/dev/null 2>&1; then
+            Remove-Item -Recurse -Force dist/ -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force node_modules/ -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force .vite/ -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force docs/.vitepress/cache/ -ErrorAction SilentlyContinue
+          else
+            rmdir /s /q dist 2>nul || echo "dist/ not found"
+            rmdir /s /q node_modules 2>nul || echo "node_modules/ not found"
+            rmdir /s /q .vite 2>nul || echo ".vite/ not found"
+            rmdir /s /q docs\.vitepress\cache 2>nul || echo "docs/.vitepress/cache/ not found"
+          fi
+        else
+          echo "🔧 [DEBUG] Unix/Linux detected - using rm commands"
+          rm -rf dist/
+          rm -rf node_modules/
+          rm -rf .vite/
+          rm -rf docs/.vitepress/cache/
+        fi
 
   docs:dev:
     desc: Start documentation development server
@@ -223,3 +259,89 @@ tasks:
     env:
       DOCKER_BUILDKIT: 1
       COMPOSE_DOCKER_CLI_BUILD: 1
+
+  # Debug tasks
+  debug:os:
+    desc: Detect operating system and show system info
+    cmds:
+      - echo "🔧 [DEBUG] Operating System Detection:"
+      - |
+        if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+          echo "  Platform: Windows"
+          echo "  OS: $OS"
+          echo "  OSTYPE: $OSTYPE"
+          if command -v uname >/dev/null 2>&1; then
+            echo "  Kernel: $(uname -s)"
+            echo "  Architecture: $(uname -m)"
+          fi
+        else
+          echo "  Platform: Unix/Linux"
+          echo "  OS: $OS"
+          echo "  OSTYPE: $OSTYPE"
+          if command -v uname >/dev/null 2>&1; then
+            echo "  Kernel: $(uname -s)"
+            echo "  Architecture: $(uname -m)"
+            echo "  Distribution: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2 2>/dev/null || echo 'Unknown')"
+          fi
+        fi
+
+  debug:env:
+    desc: Debug environment and configuration
+    cmds:
+      - echo "🔧 [DEBUG] Environment Information:"
+      - node --version
+      - pnpm --version
+      - pwd
+      - echo "Gitpod workspace URL available"
+      - |
+        if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+          echo "🔧 [DEBUG] Windows detected"
+          if command -v Test-Path >/dev/null 2>&1; then
+            Test-Path package.json
+            Test-Path Taskfile.yml
+          else
+            echo "package.json exists: $([ -f package.json ] && echo 'Yes' || echo 'No')"
+            echo "Taskfile.yml exists: $([ -f Taskfile.yml ] && echo 'Yes' || echo 'No')"
+          fi
+        else
+          echo "🔧 [DEBUG] Unix/Linux detected"
+          ls -la package.json 2>/dev/null || echo "package.json not found"
+          ls -la Taskfile.yml 2>/dev/null || echo "Taskfile.yml not found"
+        fi
+
+  debug:test:
+    desc: Debug test configuration
+    cmds:
+      - echo "🔧 [DEBUG] Test Configuration:"
+      - |
+        if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+          if command -v Test-Path >/dev/null 2>&1; then
+            Test-Path vitest.config.ts
+          else
+            echo "vitest.config.ts exists: $([ -f vitest.config.ts ] && echo 'Yes' || echo 'No')"
+          fi
+        else
+          ls -la vitest.config.ts 2>/dev/null || echo "vitest.config.ts not found"
+        fi
+      - echo "Running test with debug output..."
+      - npx vitest run --reporter=verbose
+
+  debug:lint:
+    desc: Debug linting configuration
+    cmds:
+      - echo "🔧 [DEBUG] Lint Configuration:"
+      - |
+        if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+          if command -v Test-Path >/dev/null 2>&1; then
+            Test-Path eslint.config.js
+            Test-Path tsconfig.json
+          else
+            echo "eslint.config.js exists: $([ -f eslint.config.js ] && echo 'Yes' || echo 'No')"
+            echo "tsconfig.json exists: $([ -f tsconfig.json ] && echo 'Yes' || echo 'No')"
+          fi
+        else
+          ls -la eslint.config.js 2>/dev/null || echo "eslint.config.js not found"
+          ls -la tsconfig.json 2>/dev/null || echo "tsconfig.json not found"
+        fi
+      - echo "Running lint with debug output..."
+      - pnpm lint

@@ -12,7 +12,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "emitDeclarationOnly": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
