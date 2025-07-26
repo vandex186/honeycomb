@@ -5,7 +5,7 @@ image:
 # Ports to expose
 ports:
   - port: 5173
-    onOpen: open
+    onOpen: open-browser
     name: "Vite Dev Server"
     description: "Development server for the application"
   - port: 4173
