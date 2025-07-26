@@ -146,6 +146,11 @@ tasks:
       - pnpm run build
       - echo "✅ Prebuild complete!"
 
+  gitpod:validate:
+    desc: Validate Gitpod configuration and readiness
+    cmds:
+      - bash scripts/validate-gitpod.sh
+
   # Development workflow tasks
   start:
     desc: Start development environment (install + dev)
