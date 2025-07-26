@@ -5,6 +5,11 @@ import dts from 'vite-plugin-dts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Extract host from GITPOD_WORKSPACE_URL or use fallback
+const workspaceUrl = process.env.GITPOD_WORKSPACE_URL || 'https://default.gitpod.io';
+const allowedHost = workspaceUrl.replace(/https?:\/\//, ''); // Remove http:// or https://
+console.log('Resolved allowedHost:', allowedHost);
+
 export default defineConfig({
   server: {
     host: true,
@@ -13,7 +18,7 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
-    allowedHosts: process.env.GITPOD_WORKSPACE_URL ? [process.env.GITPOD_WORKSPACE_URL.replace('https://', '')] : ['5173-vandex186-honeycomb-k99blh8xpj5.ws-us120.gitpod.io'],
+    allowedHosts: [allowedHost],
   },
   build: {
     target: 'esnext',
