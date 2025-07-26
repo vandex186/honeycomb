@@ -29,10 +29,8 @@ tasks:
     command: |
       echo "Workspace ready for development!"
       echo "Dependencies installed and cached"
-      echo "Run 'npm run dev' to start the development server"
-      echo "Run 'npm run build' to build for production"
-      echo "Run 'npm run preview' to preview the production build"
-      echo "Your dev server will be available at port 5173"
+      echo "Auto-launching development server..."
+      npm run dev
 
 # VS Code extensions to install
 vscode:
