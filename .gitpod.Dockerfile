@@ -6,26 +6,27 @@ ENV DOCKER_BUILDKIT=1
 ENV BUILDKIT_PROGRESS=plain
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Install Node.js LTS
-USER gitpod
-RUN bash -c ". .nvm/nvm.sh && nvm install --lts && nvm use --lts && nvm alias default lts/*"
+# Install Node.js LTS using the system package manager
+USER root
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
 
 # Install pnpm globally
-RUN bash -c ". .nvm/nvm.sh && nvm use --lts && npm install -g pnpm"
+RUN npm install -g pnpm
 
 # Configure pnpm with persistent cache for faster installs
-RUN bash -c ". .nvm/nvm.sh && nvm use --lts && \
+RUN mkdir -p /home/gitpod/.pnpm-store /home/gitpod/.pnpm-cache && \
+    chown -R gitpod:gitpod /home/gitpod/.pnpm-store /home/gitpod/.pnpm-cache && \
     pnpm config set store-dir /home/gitpod/.pnpm-store && \
-    pnpm config set cache-dir /home/gitpod/.pnpm-cache && \
-    mkdir -p /home/gitpod/.pnpm-store /home/gitpod/.pnpm-cache"
+    pnpm config set cache-dir /home/gitpod/.pnpm-cache
 
 # Install global packages (only the essentials)
-RUN bash -c ". .nvm/nvm.sh && nvm use --lts && pnpm add -g \
+RUN pnpm add -g \
     typescript@latest \
     @types/node@latest \
     vite@latest \
     prettier@latest \
-    eslint@latest"
+    eslint@latest
 
 # Install additional development tools
 USER root
@@ -55,13 +56,14 @@ RUN git config --global init.defaultBranch main && \
 # Set working directory
 WORKDIR /workspace
 
-# Copy package files for dependency caching
+# Copy package files for reference (dependencies will be installed at runtime)
 COPY package.json pnpm-lock.yaml* ./
 
-# Install dependencies during image build for faster workspace startup
-RUN bash -c ". .nvm/nvm.sh && nvm use --lts && \
-    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
-    else pnpm install; fi"
+# Switch back to gitpod user
+USER gitpod
+
+# Note: Dependencies will be installed at runtime to avoid permission issues
+# This allows for better caching and avoids Docker build permission problems
 
 # Set up environment
 RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc && \

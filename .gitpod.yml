@@ -9,6 +9,10 @@ tasks:
         curl -sL https://taskfile.dev/install.sh | sh -s -- -d -b ~/.local/bin
         export PATH="$PATH:~/.local/bin"
       fi
+      # Install dependencies first
+      echo "📦 Installing dependencies..."
+      pnpm install --frozen-lockfile
+      echo "✅ Dependencies installed"
       # Run prebuild setup
       task gitpod:prebuild
     command: bash scripts/gitpod-start.sh
@@ -22,4 +26,3 @@ vscode:
   extensions:
     - dbaeumer.vscode-eslint
     - esbenp.prettier-vscode
-    - ms-azuretools.vscode-docker
