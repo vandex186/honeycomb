@@ -1,9 +1,9 @@
 {
-  "buildCommand": "pnpm run build:web",
+  "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "pnpm install",
-  "devCommand": "pnpm run dev",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
   "functions": {
     "app/api/**/*.ts": {
       "runtime": "nodejs18.x"
