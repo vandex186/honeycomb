@@ -27,7 +27,8 @@
     "docker:logs": "task docker:logs",
     "docker:shell": "task docker:shell",
     "docker:clean": "task docker:clean",
-    "docker:build": "task docker:build"
+    "docker:build": "task docker:build",
+    "gitpod:test-hosts": "node scripts/test-gitpod-hosts.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.89.0",
