@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:web": "vite build --config vite.web.config.ts",
+    "build:lib": "vite build --config vite.config.ts",
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.ts\" --ignore-pattern \"**/*.test.ts\"",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
