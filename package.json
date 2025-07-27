@@ -33,15 +33,17 @@
     "gitpod:test-hosts": "node scripts/test-gitpod-hosts.js"
   },
   "dependencies": {
-    "@react-three/drei": "^9.89.0",
-    "@react-three/fiber": "^8.15.12",
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^9.0.0",
     "honeycomb-grid": "^4.1.5",
-    "three": "^0.157.0"
+    "three": "^0.170.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@svgdotjs/svg.js": "^3.2.0",
     "@types/node": "^24.1.0",
-    "@types/three": "^0.157.2",
+    "@types/three": "^0.170.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "abstract-astar": "^0.2.0",
