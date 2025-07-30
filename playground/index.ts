@@ -720,16 +720,16 @@ function getTerrainType(index: number, radialDistance?: number) {
     
     switch (radialDistance) {
       case 0: return CASTLE  // Center - Castle
-      case 1: // Ring A - mostly fields except A5, A6
+      case 1: // Ring A - mostly fields except A5, A6 (north forest)
         if (ringPosition === 5 || ringPosition === 6) return TREES
         return FIELD
-      case 2: // Ring B - mostly fields except B9, B10, B11
+      case 2: // Ring B - mostly fields except B9, B10, B11 (north forest)
         if (ringPosition === 9 || ringPosition === 10 || ringPosition === 11) return TREES
         return FIELD
-      case 3: // Ring C - specific forest positions
+      case 3: // Ring C - forest positions C1-C9
         if (ringPosition >= 1 && ringPosition <= 9) return TREES
         return FIELD
-      case 4: // Ring D - specific forest positions
+      case 4: // Ring D - forest positions D3-D9, rest is water
         if (ringPosition >= 3 && ringPosition <= 9) return TREES
         return WATER
       case 5: return TREES   // Ring E - All forest (outer ring)
